@@ -2,8 +2,7 @@
 #define __SING_N_SPELL_UI_SCREEN
 
 #include <mbed.h>
-
-#include "SerialLCD.h"
+#include <serlcd.h>
 
 namespace ui {
 

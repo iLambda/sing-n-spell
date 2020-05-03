@@ -5,7 +5,7 @@ Thread ui::Display::m_threadUi;
 Thread ui::Display::m_threadEvent;
 Queue<ui::Display::screenevent_t, UI_DISPLAY_THREAD_QUEUE_SIZE> ui::Display::m_screenQueue;
 MemoryPool<ui::Display::screenevent_t, UI_DISPLAY_THREAD_QUEUE_SIZE> ui::Display::m_screenEventPool;
-SerialLCD* ui::Display::m_display = null;
+SerialLCD* ui::Display::m_display = nullptr;
 ui::screen_t ui::Display::m_screens[UI_DISPLAY_MAX_SCREENS] = {0};
 int8_t ui::Display::m_currentScreen = -1;
 

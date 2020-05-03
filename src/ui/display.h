@@ -14,6 +14,7 @@
 
 #include <mbed.h>
 #include <rtos.h>
+#include <serlcd.h>
 
 #include "ui/screens/screen.h"
 

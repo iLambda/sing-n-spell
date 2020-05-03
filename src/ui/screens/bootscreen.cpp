@@ -8,7 +8,7 @@ ui::screen::BootScreen::BootScreen() {
 
 void ui::screen::BootScreen::render(void* state, SerialLCD* display) {
     /* Get self */
-    BootScreen* self = (BootScreen*)state;
+    // BootScreen* self = (BootScreen*)state;
     /* Set font */
     // u8g2_SetDrawColor(display, 2);
     // u8g2_DrawCircle(display, 64, 32, self->x, U8G2_DRAW_ALL);

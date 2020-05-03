@@ -2,8 +2,8 @@
 #define __SING_N_SPELL_UI_SCREEN_BOOTSCREEN
 
 #include <mbed.h>
+#include <serlcd.h>
 
-#include "SerialLCD.h"
 #include "screen.h"
 
 namespace ui {
