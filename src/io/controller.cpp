@@ -3,7 +3,10 @@
 
 Thread io::Controller::m_threadInput;
 Thread io::Controller::m_threadMidi;
-io::inputstate_t io::Controller::m_state = {0};
+io::inputstate_t io::Controller::m_inState = {0};
+io::inputstate_buttons_t io::Controller::m_buttonsAbsolute = {0};
+io::inputstate_buttons_t io::Controller::m_buttonsAbsoluteOld = {0};
+io::outputstate_t io::Controller::m_outState = {0};
 utils::Event<io::midimsg_t> io::Controller::m_eventMidiReceive;
 RawSerial* io::Controller::m_midi = nullptr;
 
@@ -17,7 +20,12 @@ void io::Controller::run() {
 
 io::inputstate_t io::Controller::get() {
     /* Return the state */
-    return Controller::m_state;
+    return Controller::m_inState;
+}
+
+void io::Controller::set(const io::outputstate_t& state) {
+    /* Set the state */
+    Controller::m_outState = state;
 }
 
 void io::Controller::isrMidi(RawSerial* self) {
@@ -33,16 +41,28 @@ void io::Controller::isrMidi(RawSerial* self) {
 
 void io::Controller::updateButtons() {
     /* Peripherals to read */
-    static DigitalIn ser(NC);
-    static DigitalOut clk(NC, 1);
-    static DigitalOut srclk(NC, 1);
+    // static DigitalIn ser(NC);
+    // static DigitalOut clk(NC, 1);
+    // static DigitalOut srclk(NC, 1);
     /* 
         This routine must be 'atomic'.    
         Lock as critical the following code.
         !!! MUST BE SHORT    
     */
     CriticalSectionLock lock;
+    
+    /* Save for old state */
+    Controller::m_buttonsAbsoluteOld = Controller::m_buttonsAbsolute;
+
     /* TODO read input data */
+
+    /* TODO write input data */
+    
+    /* Write 'pressed' state for buttons */
+    Controller::m_inState.buttons.value = 
+          Controller::m_buttonsAbsolute.value
+        & ~(Controller::m_buttonsAbsoluteOld.value);
+
 }
 
 void io::Controller::midiThread() {

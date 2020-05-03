@@ -25,8 +25,14 @@ namespace io {
             /* The midi serial controller */
             static RawSerial* m_midi;
 
+            /* The buttons state */
+            static inputstate_buttons_t m_buttonsAbsolute;
+            /* The buttons state */
+            static inputstate_buttons_t m_buttonsAbsoluteOld;
             /* The state */
-            static inputstate_t m_state;
+            static inputstate_t m_inState;
+            /* Output state*/
+            static outputstate_t m_outState;
             /* The input thread */
             static Thread m_threadInput;
             /* The MIDI thread */
@@ -50,6 +56,8 @@ namespace io {
             static void run();
             /* Get the state */
             static inputstate_t get();
+            /* Sets the state */
+            static void set(const outputstate_t& state);
             
         private:
             /* Midi in interrupt */

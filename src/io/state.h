@@ -4,43 +4,57 @@
 #include <mbed.h>
 
 namespace io {
-
-    /* The button state */
-    union buttonstate_t {
-        /* The flags register */
+    /* The buttons */
+    union inputstate_buttons_t {
+        /* The value as a bitstring */
         uint8_t value;
-        /* The buttons as a packed 1-bit wide struct */
+        /* The value as a structured datatype */
         struct {
-            /* The UDLR buttons */
-            uint8_t up : 1;
-            uint8_t down : 1;
-            uint8_t left : 1;
-            uint8_t right : 1;
-            /* The START/SELECT buttons */
-            uint8_t start : 1;
-            uint8_t select : 1;
-            /* The A/B buttons */
-            uint8_t a : 1;
-            uint8_t b : 1;
-        };
-    };
-
-    /* The battery state */
-    struct batterystate_t {
-        /* The percentage */
-        uint8_t percentage;
-        /* Is the battery charging ? */
-        bool charging;
+            /* The edit mode switch */
+            uint8_t edit : 1;
+            
+            /* The prelisten key */
+            uint8_t prelisten : 1;
+            /* The save key */
+            uint8_t save : 1;
+            /* The save key */
+            uint8_t load : 1;
+            /* The next key */
+            uint8_t save : 1;
+            /* The prev key */
+            uint8_t load : 1;
+            
+            /* The individual mode selector */
+            uint8_t individual : 1; 
+            /* The command/phoneme mode selector */
+            uint8_t cmdphon : 1; 
+        } buttons;
     };
 
     /* The input state */    
     struct inputstate_t {
+        /* The alt key */
+        uint8_t alt : 1;
+
         /* The buttons */
-        buttonstate_t buttons;
-        /* The battery state */
-        batterystate_t battery;
-        /* The volume potentiometer input */
-        uint8_t volume;
+        inputstate_buttons_t buttons;
+
+        /* The pitch encoder */
+        int8_t pitch;
+        /* The file selector */
+        int8_t file;
+        /* The value encoder */
+        int8_t value;
+        /* The selector */
+        int8_t selector;
+    };
+
+    /* The output state */
+    struct outputstate_t {
+        /* The individual mode selector */
+        uint8_t individual : 1; 
+        /* The command/phoneme mode selector */
+        uint8_t cmdphon : 1; 
     };
 }
 
