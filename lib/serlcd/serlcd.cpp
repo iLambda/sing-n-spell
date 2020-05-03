@@ -1,6 +1,7 @@
 #include <mbed.h>
+#include <rtos.h>
 
-#include "SerialLCD.h"
+#include "serlcd.h"
  
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -66,7 +67,7 @@ void SerialLCD::init()
   transmit(SETTING_COMMAND);                      //Put LCD into setting mode
   transmit(CLEAR_COMMAND);                        //Send clear display command
   endTransmission();                              //Stop transmission
-  wait_ms(50);                                      //let things settle a bit
+  ThisThread::sleep_for(50);                                      //let things settle a bit
 } //init
 
 /*
@@ -82,8 +83,7 @@ void SerialLCD::command(uint8_t command)
   transmit(command);         //Send the command code
   endTransmission();         //Stop transmission
 
-  
-  wait_ms(10); //Hang out for a bit
+  ThisThread::sleep_for(10); //Hang out for a bit
 }
 
 /*
@@ -98,7 +98,7 @@ void SerialLCD::specialCommand(uint8_t command)
   transmit(command);         //Send the command code
   endTransmission();         //Stop transmission
 
-  wait_ms(50); //Wait a bit longer for special display commands
+  ThisThread::sleep_for(50); //Wait a bit longer for special display commands
 }
 
 /*
@@ -119,7 +119,7 @@ void SerialLCD::specialCommand(uint8_t command, uint8_t count)
   }                            // for
   endTransmission();           //Stop transmission
 
-  wait_ms(50); //Wait a bit longer for special display commands
+  ThisThread::sleep_for(50); //Wait a bit longer for special display commands
 }
 
 /*
@@ -130,7 +130,7 @@ void SerialLCD::specialCommand(uint8_t command, uint8_t count)
 void SerialLCD::clear()
 {
   command(CLEAR_COMMAND);
-  wait_ms(10); // a little extra wait_ms after clear
+  ThisThread::sleep_for(10); // a little extra ThisThread::sleep_for after clear
 }
 
 /*
@@ -180,7 +180,7 @@ void SerialLCD::createChar(uint8_t location, uint8_t charmap[])
     transmit(charmap[i]);
   } // for
   endTransmission();
-  wait_ms(50); //This takes a bit longer
+  ThisThread::sleep_for(50); //This takes a bit longer
 }
 
 /*
@@ -204,7 +204,7 @@ size_t SerialLCD::write(uint8_t b)
   beginTransmission(); // transmit to device
   transmit(b);
   endTransmission(); //Stop transmission
-  wait_ms(10);         // wait a bit
+  ThisThread::sleep_for(10);         // wait a bit
   return 1;
 } // write
 
@@ -222,7 +222,7 @@ size_t SerialLCD::write(const uint8_t *buffer, size_t size)
     n++;
   }                  //while
   endTransmission(); //Stop transmission
-  wait_ms(10);         //
+  ThisThread::sleep_for(10);         //
   return n;
 } //write
 
@@ -419,7 +419,7 @@ void SerialLCD::setBacklight(uint8_t r, uint8_t g, uint8_t b)
   transmit(SPECIAL_COMMAND);                      //Send special command character
   transmit(LCD_DISPLAYCONTROL | _displayControl); //Turn display on as before
   endTransmission();                              //Stop transmission
-  wait_ms(50);                                      //This one is a bit slow
+  ThisThread::sleep_for(50);                                      //This one is a bit slow
 } // setBacklight
 
 // New backlight function
@@ -433,7 +433,7 @@ void SerialLCD::setFastBacklight(unsigned long rgb)
   setFastBacklight(r, g, b);
 }
 
-//New command - set backlight with LCD messages or wait_mss
+//New command - set backlight with LCD messages or ThisThread::sleep_fors
 void SerialLCD::setFastBacklight(uint8_t r, uint8_t g, uint8_t b)
 {
   //send commands to the display to set backlights
@@ -444,7 +444,7 @@ void SerialLCD::setFastBacklight(uint8_t r, uint8_t g, uint8_t b)
   transmit(g);               //Send the green value
   transmit(b);               //Send the blue value
   endTransmission();         //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 } // setFastBacklight
 
 //Enable system messages
@@ -455,7 +455,7 @@ void SerialLCD::enableSystemMessages()
   transmit(SETTING_COMMAND);               //Send special command character
   transmit(ENABLE_SYSTEM_MESSAGE_DISPLAY); //Send the set '.' character
   endTransmission();                       //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 }
 
 //Disable system messages
@@ -466,7 +466,7 @@ void SerialLCD::disableSystemMessages()
   transmit(SETTING_COMMAND);                //Send special command character
   transmit(DISABLE_SYSTEM_MESSAGE_DISPLAY); //Send the set '.' character
   endTransmission();                        //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 }
 
 //Enable splash screen at power on
@@ -476,7 +476,7 @@ void SerialLCD::enableSplash()
   transmit(SETTING_COMMAND);       //Send special command character
   transmit(ENABLE_SPLASH_DISPLAY); //Send the set '.' character
   endTransmission();               //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 }
 
 //Disable splash screen at power on
@@ -486,7 +486,7 @@ void SerialLCD::disableSplash()
   transmit(SETTING_COMMAND);        //Send special command character
   transmit(DISABLE_SPLASH_DISPLAY); //Send the set '.' character
   endTransmission();                //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 }
 
 //Save the current display as the splash
@@ -498,7 +498,7 @@ void SerialLCD::saveSplash()
   transmit(SETTING_COMMAND);                //Send special command character
   transmit(SAVE_CURRENT_DISPLAY_AS_SPLASH); //Send the set Ctrl+j character
   endTransmission();                        //Stop transmission
-  wait_ms(10);
+  ThisThread::sleep_for(10);
 }
 
 /*
@@ -553,7 +553,7 @@ void SerialLCD::setContrast(uint8_t new_val)
   transmit(new_val);          //Send new contrast value
   endTransmission();          //Stop transmission
 
-  wait_ms(10); //Wait a little bit
+  ThisThread::sleep_for(10); //Wait a little bit
 } //setContrast
 
 /*
@@ -576,5 +576,5 @@ void SerialLCD::setAddress(uint8_t new_addr)
   //Update our own address so we can still talk to the display
   _i2cAddr = new_addr << 1;
 
-  wait_ms(50); //This may take awhile
+  ThisThread::sleep_for(50); //This may take awhile
 } //setContrast

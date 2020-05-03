@@ -95,6 +95,6 @@ void io::Controller::inputThread() {
         /* Update buttons */
         updateButtons();
         /* Wait */
-        wait_ms(IO_CONTROLLER_REFRESH_INPUT_RATE);
+        ThisThread::sleep_for(IO_CONTROLLER_REFRESH_INPUT_RATE);
     }
 }
