@@ -12,16 +12,11 @@ namespace ui {
         class BootScreen {
 
             private:
-                int x = 0;
-
             public:
                 static const uint8_t SCREEN_ID;
 
             public:
-                BootScreen();
-
-            public:
-                
+                BootScreen();                
 
             public:
                 /* Return a screen_t representing this screen */
