@@ -20,9 +20,9 @@ namespace io {
             /* The save key */
             uint8_t load : 1;
             /* The next key */
-            uint8_t save : 1;
+            uint8_t next : 1;
             /* The prev key */
-            uint8_t load : 1;
+            uint8_t prev : 1;
             
             /* The individual mode selector */
             uint8_t individual : 1; 
