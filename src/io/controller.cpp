@@ -60,9 +60,8 @@ void io::Controller::updateButtons() {
     
     /* Write 'pressed' state for buttons */
     Controller::m_inState.buttons.value = 
-          Controller::m_buttonsAbsolute.value
-        & ~(Controller::m_buttonsAbsoluteOld.value);
-
+            Controller::m_buttonsAbsolute.value
+        & (~Controller::m_buttonsAbsoluteOld.value);
 }
 
 void io::Controller::midiThread() {
