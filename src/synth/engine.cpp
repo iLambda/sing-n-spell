@@ -9,7 +9,7 @@ using namespace synth;
 /* The current keymap */
 keymap_t Engine::m_keymap = {0};
 /* The current key */
-uint8_t Engine::m_key = ENGINE_KEY_GLOBAL;
+uint8_t Engine::m_key = ENGINE_NOTE_DEFAULT;
 /* The workbench word */
 word_t* Engine::m_workbench = nullptr;
 /* The workbench iterator */
