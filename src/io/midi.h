@@ -8,6 +8,9 @@
 
 namespace io {
 
+    const char* const notes[12] = 
+        { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
+
     enum midimsgtype_t {
         MIDI_TYPE_CC = 0xB0, 
         MIDI_TYPE_NOTEON = 0x90, 
@@ -139,6 +142,17 @@ namespace io {
     /* Is this a special CC msg ? */
     inline bool midi_is_special_cc(uint8_t controller) {
         return controller < MIDI_CC_ALLSOUNDOFF;
+    }
+    /* Note to string */
+    inline void midi_note_to_cstr(char* str, uint8_t note) {
+        /* Store intermediate result */
+        uint8_t tmp = __UQSUB8(note & 0x7F, 21);
+        /* Compute octave and note */
+        uint8_t semitone = tmp % 12;
+        uint8_t octave = (tmp + 9) / 12;
+        /* Put note together */
+        strcpy(str, notes[semitone]);
+        itoa(octave, str + strlen(str), 10);
     }
 };
 
