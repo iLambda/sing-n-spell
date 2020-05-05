@@ -4,6 +4,8 @@
 #include <mbed.h>
 #include <rtos.h>
 
+#include "io/controller.h"
+#include "io/midi.h"
 #include "synth/keymap.h"
 #include "utils/data/dllist.h"
 #include "utils/debugging.h"
@@ -45,6 +47,10 @@ namespace synth {
             __STATIC_FORCEINLINE const keymap_t& keymap() {
                 return Engine::m_keymap;
             }
+            /* Returns the current note */
+            __STATIC_FORCEINLINE uint8_t note() {
+                return Engine::noteOfKey(Engine::m_key);
+            }
             /* Returns the current key */
             __STATIC_FORCEINLINE keyentry_t& key() {
                 return Engine::m_keymap.keys[Engine::m_key];
@@ -63,6 +69,10 @@ namespace synth {
             __STATIC_FORCEINLINE bool dirty() {
                 return Engine::m_workbenchDirty;
             }
+
+        private:
+            /* On midi received */
+            static void midiReceived(const io::midimsg_t& midi);
             
         private:
             /* Word at */

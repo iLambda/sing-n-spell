@@ -17,7 +17,6 @@ worditerator_t* Engine::m_workbenchIterator = nullptr;
 /* Has the workbench been dirtied ? */
 bool Engine::m_workbenchDirty = false;
 
-
 /* Run the engine */
 void Engine::run() {
     /* Default pitch in keymap */
@@ -25,12 +24,52 @@ void Engine::run() {
         /* Default pitch for local mode is engine note default */
         Engine::m_keymap.keys[i].pitch = ENGINE_NOTE_DEFAULT;
     }
+    
     /* Allocate the workbench word, and assert it worked */
     MBED_ASSERT(Lexicon::alloc(Engine::m_workbench, ENGINE_WORKBENCH_WORD_SIZE));
     /* Make iterator. It is never regenerated since the workbench buffer never moves */
     Engine::m_workbenchIterator = new worditerator_t(Lexicon::iterator(Engine::m_workbench));
+    
     /* Select default note */
     Engine::select(ENGINE_NOTE_DEFAULT);
+
+    /* Subscribe to midi event */
+    io::Controller::midiReceive() += callback(&Engine::midiReceived);
+}
+
+/* On midi received */
+void midiReceived(const io::midimsg_t& midi) {
+    /* Check midi msg type */
+    /* TODO : SEPARATE THREAD WITH EVENTQUEUE
+       SO WE DON'T MISS ANY MIDI MESSAGES */
+    switch (io::midi_message_type(midi)) {
+        /* CLassic messages */
+        case io::MIDI_TYPE_NOTEON:
+        case io::MIDI_TYPE_NOTEOFF:
+        case io::MIDI_TYPE_START:
+        case io::MIDI_TYPE_STOP: {
+            return;
+        }
+        /* Controller change */
+        case io::MIDI_TYPE_CC: {
+            /* If we got a cc, check its value */
+            switch (midi.data.controller) {
+                /* All notes / sound off */
+                case io::MIDI_CC_ALLSOUNDOFF:
+                case io::MIDI_CC_NOTEOFF_ALL: {
+                    return;
+                }
+                /* Other CC msgs */
+                default: {
+                    if (io::midi_is_special_cc(midi.data.controller)) { return; }
+                    return;
+                }
+            }
+        }
+        /* Other messages : ignore */
+        default:
+            return;
+    }
 }
 
 /* Write workbench to key */
