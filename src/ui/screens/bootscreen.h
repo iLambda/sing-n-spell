@@ -6,12 +6,16 @@
 
 #include "screen.h"
 
+#define BOOTSCREEN_DURATION         1000
+
 namespace ui {
     namespace screen {
 
         class BootScreen {
 
             private:
+                uint32_t m_frame;                
+
             public:
                 static const uint8_t SCREEN_ID;
 
