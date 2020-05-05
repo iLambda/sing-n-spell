@@ -29,6 +29,16 @@ namespace io {
         MIDI_TYPE_TUNEREQUEST = 0xF6
     };
 
+    enum midicc_t {
+        MIDI_CC_ALLSOUNDOFF = 120,
+        MIDI_CC_RESET = 121,
+        MIDI_CC_NOTEOFF_ALL = 123,
+        MIDI_CC_NOTEOFF_NOOMNI = 124,
+        MIDI_CC_NOTEOFF_OMNI = 125,
+        MIDI_CC_NOTEOFF_MONO = 126,
+        MIDI_CC_NOTEOFF_POLY = 127,
+    };
+
     struct midimsg_t {
         /* The status byte */
         union {
@@ -54,6 +64,14 @@ namespace io {
             struct {
                 uint8_t byte1;
                 uint8_t byte2;
+            };
+            struct {
+                uint8_t key;
+                uint8_t velocity;
+            };
+            struct {
+                uint8_t controller;
+                uint8_t change;
             };
         } data;
     };
@@ -107,16 +125,20 @@ namespace io {
         }
     }
     /* Return midi message length */
-    inline int8_t midi_message_len(midimsg_t msg) {
+    inline int8_t midi_message_len(const midimsg_t& msg) {
         return midi_message_len(msg.status.value);
     }
     /* Return midi message length */
-    inline midimsgtype_t midi_message_type(midimsg_t msg) {
+    inline midimsgtype_t midi_message_type(const midimsg_t& msg) {
         return (msg.status.value & 0xF0) != 0xF0 
                 /* Usual command */
                 ? (midimsgtype_t)(msg.status.value & 0xF0)
                 /* Realtime command */
                 : (midimsgtype_t)(msg.status.value);
+    }
+    /* Is this a special CC msg ? */
+    inline bool midi_is_special_cc(uint8_t controller) {
+        return controller < MIDI_CC_ALLSOUNDOFF;
     }
 };
 
