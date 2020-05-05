@@ -7,7 +7,7 @@ io::inputstate_t io::Controller::m_inState = {0};
 io::inputstate_buttons_t io::Controller::m_buttonsAbsolute = {0};
 io::inputstate_buttons_t io::Controller::m_buttonsAbsoluteOld = {0};
 io::outputstate_t io::Controller::m_outState = {0};
-utils::Event<io::midimsg_t> io::Controller::m_eventMidiReceive;
+utils::Event<const io::midimsg_t&> io::Controller::m_eventMidiReceive;
 utils::Event<const io::inputstate_t&> io::Controller::m_eventInputReceive;
 RawSerial* io::Controller::m_midi = nullptr;
 

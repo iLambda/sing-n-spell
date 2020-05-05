@@ -42,7 +42,7 @@ namespace io {
             static Mail<uint8_t, IO_CONTROLLER_MIDI_QUEUE_SIZE> m_midiMail;
 
             /* The midi received event */
-            static utils::Event<midimsg_t> m_eventMidiReceive;
+            static utils::Event<const midimsg_t&> m_eventMidiReceive;
             /* The input received */
             static utils::Event<const inputstate_t&> m_eventInputReceive;
 
@@ -51,7 +51,7 @@ namespace io {
 
         public:
             /* Midi receive event. The callbacks are run in midi thread context */
-            static const utils::Event<midimsg_t>& midiReceive() { return m_eventMidiReceive; }
+            static const utils::Event<const midimsg_t&>& midiReceive() { return m_eventMidiReceive; }
             /* Input receive event. The callbacks are run in midi thread context */
             static const utils::Event<const inputstate_t&>& inputReceive() { return m_eventInputReceive; }
 
