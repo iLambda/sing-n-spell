@@ -75,6 +75,11 @@ namespace utils {
                 return this->append(&this->m_callbacks, callback);
             }
 
+            /* Add += operator for on */
+            bool operator+=(Callback<void(T)> callback) const {
+                return this->on(callback);
+            }
+
             /* Unregister */
             bool remove(Callback<void(T)> callback) const {
                 return this->remove(&this->m_callbacks, callback);
