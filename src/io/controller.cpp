@@ -8,6 +8,7 @@ io::inputstate_buttons_t io::Controller::m_buttonsAbsolute = {0};
 io::inputstate_buttons_t io::Controller::m_buttonsAbsoluteOld = {0};
 io::outputstate_t io::Controller::m_outState = {0};
 utils::Event<io::midimsg_t> io::Controller::m_eventMidiReceive;
+utils::Event<const io::inputstate_t&> io::Controller::m_eventInputReceive;
 RawSerial* io::Controller::m_midi = nullptr;
 
 void io::Controller::run() {
@@ -113,6 +114,8 @@ void io::Controller::inputThread() {
     while(1) {
         /* Update buttons */
         updateButtons();
+        /* Input received */
+        Controller::m_eventInputReceive.fire(Controller::m_inState);
         /* Wait */
         ThisThread::sleep_for(IO_CONTROLLER_REFRESH_INPUT_RATE);
     }

@@ -43,6 +43,8 @@ namespace io {
 
             /* The midi received event */
             static utils::Event<midimsg_t> m_eventMidiReceive;
+            /* The input received */
+            static utils::Event<const inputstate_t&> m_eventInputReceive;
 
         private:
             Controller() {}
@@ -50,6 +52,8 @@ namespace io {
         public:
             /* Midi receive event. The callbacks are run in midi thread context */
             static const utils::Event<midimsg_t>& midiReceive() { return m_eventMidiReceive; }
+            /* Input receive event. The callbacks are run in midi thread context */
+            static const utils::Event<const inputstate_t&>& inputReceive() { return m_eventInputReceive; }
 
         public:
             /* Run the controller  */
