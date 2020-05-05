@@ -41,8 +41,8 @@ namespace io {
             int8_t pitch;
             /* The file selector */
             int8_t file;
-            /* The value encoder */
-            int8_t value;
+            /* The data encoder */
+            int8_t data;
             /* The selector */
             int8_t selector;
         };
