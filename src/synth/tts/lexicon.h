@@ -28,23 +28,27 @@ namespace synth {
 
         public:
             /* Allocate a word */
-            static word_t* alloc(size_t size);
+            static bool alloc(word_t*& word, size_t size);
             /* Reallocate a word */
             static bool resize(word_t*& word, size_t size);
             /* Reallocate a word, iff the new size is bigger */
             static bool enlarge(word_t*& word, size_t size);
             /* Shrink a word */
-            static void shrink(word_t*& word);
+            static bool shrink(word_t*& word);
+            /* Clone the original word into another, but shrinked */
+            static bool shrinkCopy(word_t* const& source, word_t*& target, bool collapseZeroLength = false);
+            /* Copy the original word into another */
+            static void copy(word_t* const& source, word_t*& target);
             /* Deallocate a word */
             static void release(word_t*& word);
 
             /* Buffer size of a word */
-            static size_t size(const word_t*& word);
+            static size_t size(word_t* const& word);
             /* Length of a word */
-            static size_t length(const word_t*& word);
+            static size_t length(word_t* const& word);
 
             /* Gets the underlying buffer : can't be modified */
-            static const uint8_t* buffer(const word_t*& word);
+            static const uint8_t* buffer(word_t* const& word);
             /* Get an iterator */
             static worditerator_t iterator(word_t*& word);
 
@@ -75,6 +79,8 @@ namespace synth {
         public:
             /* Get word */
             word_t* word() const;
+            /* Select first element */
+            void first() const;
             /* Next */
             bool next() const;
             /* Previous */

@@ -2,6 +2,8 @@
 
 using namespace synth;
 
+#define BIND_ERROR(x)      {if (!(x)) { return false; }}
+
 /* A word */
 struct synth::word_t {
     /* The buffer containing the phonemes */
@@ -13,6 +15,12 @@ struct synth::word_t {
 /* Get word */
 word_t* worditerator_t::word() const {
     return this->m_word;
+}
+
+/* Select first element */
+void worditerator_t::first() const { 
+    /* Set position */
+    this->m_position = 0;
 }
 
 /* Next */
@@ -51,7 +59,7 @@ const uint8_t& worditerator_t::get() const {
 size_t Lexicon::m_usedMemory = 0;
 
 /* Gets the underlying buffer : can't be modified */
-const uint8_t* Lexicon::buffer(const word_t*& word) {
+const uint8_t* Lexicon::buffer(word_t* const& word) {
     return word->buffer;
 }
 /* Get an iterator */
@@ -60,12 +68,12 @@ worditerator_t Lexicon::iterator(word_t*& word) {
 }
 
 /* Buffer size of a word */
-size_t Lexicon::size(const word_t*& word) {
+size_t Lexicon::size(word_t* const& word) {
     return word != nullptr ? word->size : 0;
 }
 
 /* Length of a word */
-size_t Lexicon::length(const word_t*& word) {
+size_t Lexicon::length(word_t* const& word) {
     /* If null, length is 0 */
     if (word == nullptr) { return WORD_INVALID_LENGTH; }
     /* Go through buffer */
@@ -83,13 +91,14 @@ size_t Lexicon::length(const word_t*& word) {
 }
 
 /* Allocate a word */
-word_t* Lexicon::alloc(size_t size) {
-    /* If size is zero, return null */
-    if (size == 0) { return nullptr; }
-    /* Not enough memory ? If so, return null.
+bool Lexicon::alloc(word_t*& word, size_t size) {
+    /* Ensure word is null and size != 0 */
+    MBED_ASSERT(word != nullptr);
+    MBED_ASSERT(size > 0);
+    /* Not enough memory ? If so, fail.
        /!\ Special care taken to avoid overflows. */
     if (!Lexicon::fits(size)) {
-        return nullptr;
+        return false;
     }
     /* Lock */
     CriticalSectionLock lock;
@@ -97,14 +106,16 @@ word_t* Lexicon::alloc(size_t size) {
     Lexicon::m_usedMemory += size;
     /* Allocate buffer */
     uint8_t* buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
-    /* If calloc failed, return null */
+    /* If calloc failed, fail */
     if (buffer == nullptr) {
-        return nullptr;    
+        return false;    
     }
     /* Initialize buffer with full 0xFF */
     memset(buffer, ~((int)0), size);
     /* Return word */
-    return new word_t { buffer, size };
+    word = new word_t { buffer, size };
+    /* Ok */
+    return true;
 }
 
 /* Reallocate a word */
@@ -115,6 +126,8 @@ bool Lexicon::resize(word_t*& word, size_t size) {
         word = nullptr;
         return false;
     }
+    /* If word is null, error */
+    if (word == nullptr) { return false; }
     /* If size equal, we did it */
     if (size == word->size) { return true; }
     /* If size is bigger, but not enough memory, we fail */
@@ -148,6 +161,66 @@ bool Lexicon::enlarge(word_t*& word, size_t size) {
     }
     /* If size is equal, say we did it. Else, say it failed */
     return word->size == size;
+}
+
+/* Shrink a word */
+bool Lexicon::shrink(word_t*& word) {
+    /* Compute length */
+    size_t length = Lexicon::length(word);
+    /* Reallocate, but with buffer size length + 1 */
+    return Lexicon::resize(word, length+1);
+}
+/* Clone the original word into another, but shrinked */
+bool Lexicon::shrinkCopy(word_t* const& source, word_t*& target, bool collapseZeroLength) {
+    /* Compute len */
+    size_t length = Lexicon::length(source);
+    /* Assert size is valid */
+    MBED_ASSERT(length != WORD_INVALID_LENGTH);
+    
+    /* Check if zero length must be collapsed */
+    if (length == 0 && collapseZeroLength) {
+        /* Release target */
+        Lexicon::release(target);
+        /* OK */
+        return true;
+    }
+    
+    /* Compute target size */
+    size_t size = length + 1;
+    /* Prepare the target : check its status */
+    if (target == nullptr) {
+        /* Null ; we need to allocate such a buffer */
+        BIND_ERROR(Lexicon::alloc(target, size));
+    } else {
+        /* Buffer already exists. Just reallocate */
+        BIND_ERROR(Lexicon::resize(target, size));
+    }
+
+    /* Copy src buffer into target buffer */
+    memcpy(target->buffer, source->buffer, size);
+    /* We're good to go */
+    return true;   
+}
+
+/* Copy the original word into another */
+void Lexicon::copy(word_t* const& source, word_t*& target) {
+    /* Compute sizes */
+    auto target_size = Lexicon::size(target);
+    auto source_size = Lexicon::size(source);
+    /* Ensure sizes are ok */
+    MBED_ASSERT(target_size >= source_size);
+    
+    /* Check if source isn't null */
+    if (source_size > 0) {
+        /* Copy live data */
+        memcpy(target->buffer, source->buffer, source_size);
+    }   
+    /* If target is strictly bigger than source, pad 
+        (guarantees that target isn't a null ptr, since if 
+         target_size = 0 (<=> a null ptr), the condition is always false) */
+    if (target_size > source_size) {
+        memset(target->buffer + source_size, ~((int)0), target_size - source_size);
+    }
 }
 
 /* Deallocate a word */
