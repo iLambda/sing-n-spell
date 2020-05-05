@@ -28,26 +28,47 @@ namespace io {
             uint8_t individual : 1; 
             /* The command/phoneme mode selector */
             uint8_t cmdphon : 1; 
-        } buttons;
+        };
     };
+
+    /* The encoders */
+    union inputstate_encoders_t {
+        /* The value as a bitstring */
+        uint32_t value;
+        /* The value as a structured datatype */
+        MBED_PACKED(struct) {
+            /* The pitch encoder */
+            int8_t pitch;
+            /* The file selector */
+            int8_t file;
+            /* The value encoder */
+            int8_t value;
+            /* The selector */
+            int8_t selector;
+        };
+    };
+    
 
     /* The input state */    
     struct inputstate_t {
-        /* The alt key */
-        uint8_t alt : 1;
-
         /* The buttons */
         inputstate_buttons_t buttons;
-
-        /* The pitch encoder */
-        int8_t pitch;
-        /* The file selector */
-        int8_t file;
-        /* The value encoder */
-        int8_t value;
-        /* The selector */
-        int8_t selector;
+        /* The encoders */
+        inputstate_encoders_t encoders;
+        /* The alt key */
+        uint8_t alt;
     };
+
+    /* Accumulate an input state */
+    inline void accumulate(inputstate_t& accumulator, const inputstate_t& delta) {
+        /* Accumulate alt */
+        accumulator.alt |= delta.alt;
+        /* Accumulate buttons */
+        accumulator.buttons.value |= delta.buttons.value;
+        /* Accumulate encoders */        
+        accumulator.encoders.value = 
+            __QADD8(accumulator.encoders.value, delta.encoders.value);
+    }
 
     /* The output state */
     struct outputstate_t {
