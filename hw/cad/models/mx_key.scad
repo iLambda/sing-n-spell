@@ -4,7 +4,7 @@
 /* [Basic-Settings] */
 
 // what preset profile do you wish to use? disable if you are going to set paramters below
-key_profile = "dcs"; // [dcs, oem, dsa, sa, g20, disable]
+key_profile = "dsa"; // [dcs, oem, dsa, sa, g20, disable]
 // what key profile row is this keycap on? 0 for disable
 row = 1; // [5,1,2,3,4,0]
 
