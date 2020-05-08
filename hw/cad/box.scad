@@ -1,6 +1,7 @@
 /* [Globals] */
 $fn = 32;
 $itsy = 10;
+$bitsy=1;
 
 /****************************
     Parameters
@@ -29,9 +30,27 @@ fpLcdGutterSize = 2;
 fpLcdGutterDepth = 1;
 fpSpeakerDiameter = 60;
 fpSpeakerLatticeSize = 2.2;
-fpPosLcd = [25, 30];
-fpPosSpeaker = -20;
+fpPosLcd = [20.1, 30];
+fpPosSpeaker = -20.1;
 fpPosSelector = 10;
+
+/* [Front panel - Screwing studs] */
+fpssPosition1 = [77, 50];
+fpssPosition2 = [-74, 56];
+fpssPosition3 = [-47, -28];
+fpssPosition4 = [77, -32];
+fpssAxisDiameter = 4;
+fpssAxisHeight = 2;
+fpssBaseThickness = 5;
+fpssBevelHeight = 5;
+fpssCapHeight = 6;
+fpssDockHeight = 1.5;
+fpssDockThickness = 1.5;
+fpssStudDiameter = 6.75;
+fpssStudHeight = 11;
+fpssStudInsertHeight = 3;
+fpssStudInsertDiameter = 8.5;
+fpssWallThickness = 1.5;
 
 /* [Front panel - Groups] */
 fpgOutsideMargin = 16;
@@ -44,7 +63,7 @@ fpgShowAlign = false;
 
 /* [Components - Cherry MX] */
 cmxDrawGhosts = true;
-cmxSize = 14.5;
+cmxSize = 14.0;
 cmxReducedSize = 20;
 cmxThickness = 1.5;
 
@@ -54,7 +73,7 @@ lcdSize = [89.5, 42.5];
 
 /* [Components - Rotary encoders] */
 rotDrawGhosts = true;
-rotDiameter = 8;
+rotDiameter = 7.0;
 
 /* [Components - Toggle] */
 tglDrawGhosts = true;
@@ -64,7 +83,7 @@ tglDiameter = 6.5;
 /* [Components - Light toggle] */
 ltglDrawGhosts = true;
 ltglGhostColor = "#303030";
-ltglSize = [14, 19];
+ltglSize = [12.5, 17.5];
 
 /* [Components - Nucleo] */
 nucleoDrawGhosts = true;
@@ -74,9 +93,11 @@ nucleoHideBottom = true;
 renderBoxAround = true;
 renderBoxOverhang = true;
 renderBoxNucleo = true;
+renderBoxScrewStuds = true;
 renderPanelPane = true;
 renderPanelGutters = true;
 renderPanelParts = true;
+renderPanelScrewStuds = true;
 
 /* [Rendering] */
 renderPanel = true;
@@ -93,7 +114,7 @@ module RoundBox(x,y,z, radius) {
   minkowski()
   {
     cube([x - 2 * radius, y - 2 * radius, z/2]);
-    cylinder(r=radius, h=z/2);
+    cylinder(r=radius, h=z/2, $fn=100);
   }
 }
 
@@ -124,9 +145,147 @@ module Hexagon(size, height) {
       cube([boxWidth, size, height], true);
 }
 
+module CircularBevelProfile(size) { 
+  difference() {  
+    square(size);
+    translate(size)
+    intersection() {        
+      /* Make circle */
+      resize(newsize=2*size)
+      circle(10);
+      /* Select quarter */
+      translate(-size)
+      square(size);
+    }
+  }
+}
+
 /****************************
     Components
 *****************************/
+
+module Component_ScrewStudTop(
+  axisDiameter = 4,
+  axisHeight = 10,
+  baseWallThickness = 6,
+  baseHeight = fpThickness/2,
+  bevelHeight = 5,
+  studDiameter = 6.75,
+  studHeight = 11,
+  studInsertHeight = 4,
+  studInsertDiameter = 8,
+  wallThickness = 1.5,
+  squareBase=false) {
+    /* Total diameter */
+    totalRadius = wallThickness + (studInsertDiameter/ 2);
+    totalHeight = axisHeight + studHeight + studInsertHeight;
+    
+    /* Merge all */
+    rotate([180, 0, 0])
+    union() {
+      /* Base is a cube ? */
+      if (squareBase) {
+        translate([0, 0, -baseHeight/2])
+        cube([(totalRadius+baseWallThickness)*2, (totalRadius+baseWallThickness)*2, baseHeight], center=true);
+      }
+      /* Rotational symmetry */
+      rotate_extrude(convexity=4) {
+        /* Remove center axis */
+        difference() {
+          /* Body */
+          union() {        
+            /* Shaft */
+            square([totalRadius, totalHeight]);
+            /* Base */
+            translate([0, -baseHeight]) 
+            square([totalRadius + baseWallThickness, baseHeight]);
+            /* Bevel */
+            translate([totalRadius, 0])
+            CircularBevelProfile([baseWallThickness, bevelHeight]);
+          }
+          /* Axis */
+          square([axisDiameter/2, totalHeight]);
+          /* Stud */
+          translate([0, axisHeight])
+          union() {
+            /* Holder */
+            square([studDiameter/2, studHeight + studInsertHeight]);
+            /* Insert */
+            translate([0, studHeight])
+            hull() {
+              /* The insert */
+              square([studInsertDiameter/2, studInsertHeight]);
+              translate([0, -studInsertHeight])
+              square([studDiameter/2, studInsertHeight]);
+            }
+        }
+      }
+    }
+  }
+    
+}
+
+module Component_ScrewStudBottom(
+
+  height=30,
+  diameter=10,
+
+  axisDiameter = 4,
+  
+  capHeight = 10,
+  capBevelHeight = 5,
+  
+  dockHeight = 3,
+  dockDiameter = 9.5,
+
+  baseWallThickness = 6,
+  baseHeight = boxThickness/2,
+
+  bevelHeight = 5,
+
+  wallThickness = 1.5,
+  
+  squareBase=false) {   
+    
+  /* Radius */
+  radius= diameter/2;
+  insideRadius = radius - wallThickness;
+    
+  /* Rotational symmetry */
+  rotate_extrude(convexity=4) {
+    /* Remove center axis */
+    difference() {
+      /* Body */
+      union() {        
+        /* Shaft */
+        square([radius, height]);
+        /* Base */
+        translate([0, -baseHeight]) 
+        square([radius + baseWallThickness, baseHeight]);
+        /* Bevel */
+        translate([radius, 0])
+        CircularBevelProfile([baseWallThickness, bevelHeight]);
+        /* Dock */
+        translate([dockDiameter/2, height])
+        square([radius - (dockDiameter/2), dockHeight]);
+      }
+      /* Inside */
+      translate([0, -baseHeight])
+      square([insideRadius, height - capHeight - capBevelHeight + baseHeight]);
+      
+      /* Bevel on the inside */
+      hull() {
+        square([insideRadius, height - capHeight - capBevelHeight]);
+        translate([0, height - capHeight - capBevelHeight]) square([axisDiameter/2, capBevelHeight]);
+      }
+      
+      /* Axis */
+      translate([0, -baseHeight])
+      square([axisDiameter/2, height + baseHeight]);
+    }
+  }
+    
+}
 
 module Component_CherryMX(large, keycolor="#ff00007f", hcolor="Blue", thickness=$itsy) {
   /* Make square for hole */
@@ -167,7 +326,7 @@ module Component_LCD20x4(thickness=$itsy) {
     rotate([90, 0, 0])
     translate([-4.65, -7.8, -9.1])
     translate([-88.7/2, -8.75, -41.8/2])
-    import("models/lcd_20x4.stl");
+    import("models/lcd_20x4.stl", convexity=1);
   }
 }
 
@@ -186,10 +345,10 @@ module Component_Rotary(large=false, hcolor="Blue", thickness=$itsy) {
       if (large) {
         translate([-10, 10, 5])
         rotate([90, 0, 0])
-        %import("models/encoder_knob_large.stl", convexity=10);
+        %import("models/encoder_knob_large.stl", convexity=2);
       } else {
         translate([-8, -8, 6])
-        %import("models/encoder_knob.stl", convexity=10);
+        %import("models/encoder_knob.stl", convexity=2);
       }
     }
   }
@@ -203,20 +362,34 @@ module Component_Nucleo144(thickness=$itsy) {
   /* The holder */
   translate([132, 0, 0])
   rotate([0, 0, 90])
+  color("Grey")
   difference() {
     /* The model */
     translate([0, 0, !nucleoHideBottom ? 0 : -5])
-    import("models/nucleo_holder.stl",convexity=10);
+    import("models/nucleo_holder.stl",convexity=4);
     /* Remove the bottom */
     translate([0, 75, -5])
     cube([200, 200, 10], center=true);
+  }
+  /* Ghost */
+  if (nucleoDrawGhosts) {
+    %translate([76.25, -24.1, 6.5])
+    rotate([0, 0, 90])
+    color("#505050df")
+    difference() {
+      /* Nucleo */
+      import("models/nucleo.stl",convexity=7);
+      /* Cut feet */
+      translate([40-15, 10, -12])
+      cube([80, 130, 20], center=true);      
+    }
   }
 }
 
 module Component_SpeakerGrid(latticeSize, radius, thickness=$itsy) {
   /* The shape to remove */
   translate([0, 0, -fpThickness/2])
-  minkowski(convexity=6) {
+  minkowski(convexity=3) {
     /* The square object */
     intersection() {
       /* The cylinder */
@@ -235,43 +408,56 @@ module Component_SpeakerGrid(latticeSize, radius, thickness=$itsy) {
   }
 }
 
-module Component_LightToggle_Studs(circuit_thickness=2) {
+module Component_LightToggle_Studs_v2(height=$itsy, hollow=true, additional_radius=0) {
+  difference() {
+    cylinder(height, 5.5+additional_radius, 5.5+additional_radius, center=true);
+    if(hollow) {
+      cylinder(height+$bitsy, 2, 2, center=true);
+    }
+  }
+}
+
+module Component_LightToggle_Studs(top=true, bottom=true, circuit_thickness=2) {
   /* Breadboard */
   %translate([0, 0, -8-circuit_thickness/2])
   cube([12.3, 45, circuit_thickness], center=true);
   /* Studs */
-  translate([0, -15, (-8-fpThickness/2)/2])
-  {
-    difference() {
-      /* The stud's body */
-      union() {
-        Hexagon(9, 8-fpThickness/2);
-      }      
-      /* The nut holder */
-      hull() {
-        Hexagon(6.5, 2.5);
-        translate([0, -10, 0])
-        Hexagon(6.5, 2.5);
+  if (top) {
+    translate([0, -15, (-8-fpThickness/2)/2])
+    {
+      difference() {
+        /* The stud's body */
+        union() {
+          Hexagon(9, 8-fpThickness/2);
+        }      
+        /* The nut holder */
+        hull() {
+          Hexagon(6.5, 3.5);
+          translate([0, -10, 0])
+          Hexagon(6.5, 3.5);
+        }
+        /* The axis */
+        cylinder(10, 2, 2, center=true);
       }
-      /* The axis */
-      cylinder(10, 1.5, 1.5, center=true);
     }
   }
-  translate([0, 15, (-8-fpThickness/2)/2])
-  {
-    difference() {
-      /* The stud's body */
-      union() {
-        Hexagon(9, 8-fpThickness/2);
-      }      
-      /* The nut holder */
-      hull() {
-        Hexagon(6.5, 2.5);
-        translate([0, 10, 0])
-        Hexagon(6.5, 2.5);
+  if(bottom) {
+    translate([0, 15, (-8-fpThickness/2)/2])
+    {
+      difference() {
+        /* The stud's body */
+        union() {
+          Hexagon(9, 8-fpThickness/2);
+        }      
+        /* The nut holder */
+        hull() {
+          Hexagon(6.5, 3.5);
+          translate([0, 10, 0])
+          Hexagon(6.5, 3.5);
+        }
+        /* The axis */
+        cylinder(10, 2, 2, center=true);
       }
-      /* The axis */
-      cylinder(10, 1.5, 1.5, center=true);
     }
   }
 }
@@ -333,14 +519,15 @@ module Component_LightToggle(hcolor="Blue", thickness=$itsy) {
   }
   
   /* Hole */
+  lpStudHoleHeight = fpThickness*0.75;
   color(hcolor) {
     cube([ltglSize.x, ltglSize.y, thickness], center=true);
     /* Hole for studs */
-    translate([0, 0, (-8-fpThickness/2)/2 - fpThickness/4])
+    translate([0, 0, -(fpThickness + $bitsy)])
     {
         /* The axis */
-        translate([0, -15, 0]) cylinder(10, 1.5, 1.5, center=true);
-        translate([0, 15, 0]) cylinder(10, 1.5, 1.5, center=true);
+        translate([0, -14.5, ((lpStudHoleHeight+$bitsy)/2)]) 
+        Hexagon(6.5, lpStudHoleHeight+$bitsy);
     }
   }
 }
@@ -428,21 +615,59 @@ module Groups_Holes() {
 /****************************
     Parts
 *****************************/
+
+module Part_TopScrewStud() {
+  Component_ScrewStudTop(
+      fpssAxisDiameter, fpssAxisHeight,
+      fpssBaseThickness, fpThickness/2, fpssBevelHeight, 
+      fpssStudDiameter, fpssStudHeight, 
+      fpssStudInsertHeight, fpssStudInsertDiameter, 
+      fpssWallThickness);    
+}
+
+module Part_BottomScrewStud(holes=false) {
+  if (holes) {
+   let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter)
+      cylinder(boxThickness+$itsy, 
+        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness,
+        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness, center=true);
+  }
+  else {
+    let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter)
+    /* Compute bevel for screw */
+    let (insideRadius = (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness)
+    let (axisRadius = fpssAxisDiameter/2)
+    let (capBevelHeight = (insideRadius - axisRadius) * (2.0/2.5))
+    /* Compute height */
+    let(studTopHeight = fpssAxisHeight + fpssStudHeight + fpssStudInsertHeight)
+    let (height = boxHeight - boxThickness - fpThickness - studTopHeight )
+    /* Draw */
+    Component_ScrewStudBottom(
+      height, studTopDiameter + fpssDockThickness,
+      fpssAxisDiameter, fpssCapHeight, capBevelHeight,
+      fpssDockHeight, studTopDiameter, 
+      fpssBaseThickness, boxThickness/2, fpssBevelHeight,
+      fpssWallThickness);
+  }
+      
+}
+
 module Part_Panel() {
   /* Panel is orange */
     /* Make holes for the parts */
+  
+  translate([0, 0, boxHeight])
   union() {
     difference() {
       /* The panel */
       if (renderPanelPane) {
-        translate([0, 0, boxHeight - fpThickness/2])
+        translate([0, 0, - fpThickness/2])
         color(fpColor) {
           RoundBox(fpWidth, fpLength, fpThickness, fpCornerRadius);
         }
       }
       /* The holes for parts */
       if (renderPanelParts) {
-        translate([0, 0, boxHeight])
         union() {
           /* The LCD */
           translate(fpPosLcd)
@@ -461,7 +686,7 @@ module Part_Panel() {
       }
       /* The panel gutter */
       if (renderPanelGutters) {
-        translate([0, fpPosLcd.y, boxHeight]) 
+        translate([0, fpPosLcd.y]) 
         union() {
           /* The gutter backdrop color */
           color(fpLcdZoneColor)
@@ -478,45 +703,68 @@ module Part_Panel() {
       }
     } 
     /* Add LCD studs */
-    studHeight = 4.75;
-    translate([fpPosLcd.x, fpPosLcd.y, boxHeight])
-    translate([0, 0, -fpThickness-studHeight/2 + fpThickness/4])
-    color(fpColor)
-    union() {
-      let(studSize = [60, 9]) {
-        translate([0, -23])
-        translate([0, -studSize.y/2])
-        cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
-      } 
-      let(studSize = [40, 9]) {
-        translate([22, 23, 0])
-        translate([0, +studSize.y/2])
-        cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
-      } 
-      let(studSize = [4, 20]) {
-        translate([-50, 0])
-        translate([+studSize.x/2, 0])
-        cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
-      } 
-    }
-    /* Add light toggle studs */
-    {
-      /* Helpers */
-      fullWidth = fpWidth - 2*fpgOutsideMargin;
-      sideHeight = (fpgLength - fpgInsideMargin.y) / 2;
-      fpgLeftRightRatio = fpgLeftRelSize / (fpgLeftRelSize + fpgRightRelSize);
-      leftSideWidth = fpgLeftRightRatio * (fullWidth - fpgInsideMargin.x);
-      rightSideWidth = (fullWidth - fpgInsideMargin.x) - leftSideWidth;
-      leftCaseSize = leftSideWidth / 3;
-      rightCaseSize = rightSideWidth / 4;  
-      
-      translate([0, 0, boxHeight])
-      translate([-fullWidth/2, -fpgLength + fpgTop])
+    if(renderPanelPane) {
+      studHeight = 4.75;
+      translate([fpPosLcd.x, fpPosLcd.y])
+      translate([0, 0, -fpThickness-studHeight/2 + fpThickness/4])
+      color(fpColor)
+      union() {
+        let(studSize = [60, 9]) {
+          translate([0, -23])
+          translate([0, -studSize.y/2])
+          cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
+        } 
+        let(studSize = [40, 9]) {
+          translate([22, 23, 0])
+          translate([0, +studSize.y/2])
+          cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
+        } 
+        let(studSize = [4, 20]) {
+          translate([-50, 0])
+          translate([+studSize.x/2, 0])
+          cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
+        } 
+      }
+      /* Add light toggle studs */
       {
-        translate([leftSideWidth + fpgInsideMargin.x, 0, 0])
-        translate([rightCaseSize/2, sideHeight/2])
-        translate([2*rightCaseSize, 0])
-        Component_LightToggle_Studs();
+        /* Helpers */
+        fullWidth = fpWidth - 2*fpgOutsideMargin;
+        sideHeight = (fpgLength - fpgInsideMargin.y) / 2;
+        fpgLeftRightRatio = fpgLeftRelSize / (fpgLeftRelSize + fpgRightRelSize);
+        leftSideWidth = fpgLeftRightRatio * (fullWidth - fpgInsideMargin.x);
+        rightSideWidth = (fullWidth - fpgInsideMargin.x) - leftSideWidth;
+        leftCaseSize = leftSideWidth / 3;
+        rightCaseSize = rightSideWidth / 4;  
+        
+        translate([-fullWidth/2, -fpgLength + fpgTop])
+        {
+          translate([leftSideWidth + fpgInsideMargin.x, 0, 0])
+          translate([rightCaseSize/2, sideHeight/2])
+          translate([2*rightCaseSize, 0])
+          {
+            *Component_LightToggle_Studs();
+            translate([0, -14.5])
+            *Component_LightToggle_Studs_v2();
+          }
+        }
+        
+        *translate([-fullWidth/2, -fpgLength + fpgTop])
+        {
+          translate([leftSideWidth + fpgInsideMargin.x, fpgInsideMargin.y + sideHeight, 0])
+          translate([rightCaseSize/2, sideHeight/2])
+          translate([2*rightCaseSize, 0])
+          Component_LightToggle_Studs();
+        }
+      }
+    }
+    /* Add screw studs */
+    if (renderPanelScrewStuds) {
+      translate([0, 0, -fpThickness])
+      color(fpColor) {
+        translate(fpssPosition1) Part_TopScrewStud();
+        translate(fpssPosition2) Part_TopScrewStud();
+        translate(fpssPosition3) Part_TopScrewStud();
+        translate(fpssPosition4) Part_TopScrewStud();
       }
     }
   }
@@ -528,37 +776,76 @@ module Part_Box() {
   union() {
     /* Make box */
     if (renderBoxAround) {
-      color(boxColor) 
-      translate([0, 0, fullHeight/2])
+      color(boxColor)
+      
       difference() {
         /* The filled box */
+        translate([0, 0, fullHeight/2])
         RoundBox(fpWidth + 2*boxThickness, fpLength + 2*boxThickness, fullHeight, fpCornerRadius);
         /* Hollow it */
-        translate([0, 0, -boxThickness + $itsy])
-        RoundBevelBox(fpWidth, fpLength, fullHeight - 2*boxThickness + $itsy, fpCornerRadius, boxBevel); 
+        translate([0, 0, fullHeight/2])
+        translate([0, 0, boxThickness + $itsy/2])
+        RoundBevelBox(fpWidth, fpLength, fullHeight + $itsy, fpCornerRadius, boxBevel);
+       /* Remove screw stud holes */
+        if (renderBoxScrewStuds) {
+          union()
+          /*color(boxColor)*/
+          translate([0, 0, boxThickness/2]) {
+            translate(fpssPosition1) Part_BottomScrewStud(true);
+            translate(fpssPosition2) Part_BottomScrewStud(true);
+            translate(fpssPosition3) Part_BottomScrewStud(true);
+            translate(fpssPosition4) Part_BottomScrewStud(true);
+          }
+        } 
       }
     }
     /* Make overhang */
     if (renderBoxOverhang) {      
       color(boxColor) 
       translate([0, 0, -boxOverhangHeight/2 + boxHeight - fpThickness])
-      intersection() {        
-        /* The inside of the box is used as the delimiter  */
-        RoundBox(fpWidth + boxThickness/2, fpLength + boxThickness/2, boxOverhangHeight, fpCornerRadius);  
-        /* Make the trapezoid */
-        minkowski(convexity=4) {
-          RoundBoxRing(fpWidth, fpLength, 0.001, 0.001, fpCornerRadius);
-          cylinder(h = boxOverhangHeight, r1 = 0, r2 = boxOverhang, center = true, $fn=3);
-        }      
+      difference() {
+        intersection() {        
+          /* The inside of the box is used as the delimiter  */
+          RoundBox(fpWidth + boxThickness/2, fpLength + boxThickness/2, boxOverhangHeight, fpCornerRadius);  
+          /* Make the trapezoid */
+          minkowski(convexity=4) {
+            RoundBoxRing(fpWidth, fpLength, 0.001, 0.001, fpCornerRadius);
+            cylinder(h = boxOverhangHeight, r1 = 0, r2 = boxOverhang, center = true, $fn=3);
+          }      
+        }
+        /* Remove the stud for one of the ltgls */
+        fullWidth = fpWidth - 2*fpgOutsideMargin;
+        sideHeight = (fpgLength - fpgInsideMargin.y) / 2;
+        fpgLeftRightRatio = fpgLeftRelSize / (fpgLeftRelSize + fpgRightRelSize);
+        leftSideWidth = fpgLeftRightRatio * (fullWidth - fpgInsideMargin.x);
+        rightSideWidth = (fullWidth - fpgInsideMargin.x) - leftSideWidth;
+        leftCaseSize = leftSideWidth / 3;
+        rightCaseSize = rightSideWidth / 4;  
+        
+        translate([-fullWidth/2, -fpgLength + fpgTop])
+        translate([leftSideWidth + fpgInsideMargin.x, 0, 0])
+        translate([rightCaseSize/2, sideHeight/2])
+        translate([2*rightCaseSize, 0])
+        translate([0, -14.5])
+        Component_LightToggle_Studs_v2(boxOverhangHeight*2, false, 1);
+      }
+    }
+    /* Add screw studs */
+    if (renderBoxScrewStuds) {
+      color(boxColor)
+      translate([0, 0, boxThickness]) {
+        translate(fpssPosition1) Part_BottomScrewStud();
+        translate(fpssPosition2) Part_BottomScrewStud();
+        translate(fpssPosition3) Part_BottomScrewStud();
+        translate(fpssPosition4) Part_BottomScrewStud();
       }
     }
     /* Make nucleo */
     if (renderBoxNucleo) {
-      color("Grey")
-      translate([boxPosNucleo.x, boxPosNucleo.y, boxThickness])
+      translate([boxPosNucleo.x, boxPosNucleo.y, boxThickness -0.1])
       Component_Nucleo144();
     }
-  }  
+  }
 }
 
 
@@ -571,4 +858,32 @@ if (renderPanel) {
 
 if (renderBox) {
   Part_Box();
+}
+
+*union() {
+  let(studTopHeight = fpssAxisHeight + fpssStudHeight + fpssStudInsertHeight)
+  let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter) {
+    /* Top stud */
+    translate([0, 0, studTopHeight])
+    Component_ScrewStudTop(
+      fpssAxisDiameter, fpssAxisHeight,
+      fpssBaseThickness, fpThickness/2, fpssBevelHeight, 
+      fpssStudDiameter, fpssStudHeight, 
+      fpssStudInsertHeight, fpssStudInsertDiameter, 
+      fpssWallThickness);     
+    /* Bottom stud */
+    translate([0, 0, -30]) {
+      Component_ScrewStudBottom(
+        30 /*height*/, studTopDiameter + fpssDockThickness,
+        fpssAxisDiameter, fpssCapHeight, /*capBevelHeight*/3,
+        fpssDockHeight, studTopDiameter, 
+        fpssBaseThickness, boxThickness/2, fpssBevelHeight,
+        fpssWallThickness);
+      translate([0, 0, -boxThickness/2])
+      cylinder(boxThickness, 
+        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness,
+        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness, center=true);
+    }
+    
+  }
 }
