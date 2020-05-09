@@ -135,6 +135,8 @@ renderPanelKeyboard = true;
 renderBackplateParts = true;
 
 /* [Rendering] */
+renderSeparatePanel = false;
+renderSeparatePanelGutter = false;
 renderPanel = true;
 renderBackplate = true;
 renderBox = true;
@@ -1139,9 +1141,43 @@ module Part_Box() {
 /****************************
     Entry point
 *****************************/
-if (renderPanel) {
-  translate([0, 0, explode])
-  Part_Panel();
+module PanelGutterSeparator() {
+  let (carveHeight = fpThickness / 2)
+  let (spkCarveRadius = 1.5+spkLatticeDiameter/2)
+  translate([0, 0, boxHeight]) 
+  translate([0, fpPosLcd.y]) {
+    union() {
+      /* The main gutter carve */
+      translate([0, 0, -carveHeight/2])
+      cube([fpWidth+$itsy, fpLcdGutterDistance - fpLcdGutterSize, carveHeight], center=true); 
+      /* The speaker carve */
+      translate([fpPosSpeaker, 0, -($itsy + fpThickness)/2])
+      cylinder($itsy + fpThickness, spkCarveRadius, spkCarveRadius);
+    }
+  }      
+}
+
+translate([0, 0, explode]) {
+  /* Basic panel */
+  if (renderPanel) {
+    Part_Panel();
+  } else {
+    /* Separate them ! */
+    if (renderSeparatePanel) {
+      difference() {
+        Part_Panel(); 
+        color(fpColor)
+        PanelGutterSeparator();
+      }
+    }
+    if (renderSeparatePanelGutter) {
+      intersection() {
+        Part_Panel(); 
+        color(fpLcdZoneColor)
+        PanelGutterSeparator();
+      }
+    }  
+  }
 }
 
 if (renderBox) {
