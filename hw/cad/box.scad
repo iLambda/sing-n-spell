@@ -22,7 +22,9 @@ bpWidth = 100;
 bpHeight = 40;
 bpColor = "Crimson";
 bpCornerRadius = 10;
-bpInset = [5, 5];
+bpDock = [2.5, 0];
+bpDockThickness = 2.1;
+bpInset = [2.1, 2.1];
 bpInsetThickness = 1;
 
 /* [Front panel] */
@@ -71,10 +73,11 @@ fpgShowAlign = false;
 cmxDrawGhosts = true;
 cmxKeycapType = "dcs";  // [dcs, dsa]
 cmxSize = 14.0;
+cmxHoleCornerRadius = 1.5;
 cmxHoleSize = [20.5, 20.5, 5.75];
 cmxHoleWallThickness = 2.5;
 cmxReducedSize = 20;
-cmxThickness = 1.5;
+cmxThickness = 1.45;
 
 /* [Components - LCD 20x4] */
 lcdDrawGhosts = true;
@@ -116,6 +119,9 @@ spkStudRotation = 90;
 nucleoDrawGhosts = true;
 nucleoHideBottom = true;
 
+/* [Visualisation] */
+explode = 0; // [0: 30]
+
 /* [Subrendering] */
 renderBoxAround = true;
 renderBoxOverhang = true;
@@ -132,6 +138,7 @@ renderBackplateParts = true;
 renderPanel = true;
 renderBackplate = true;
 renderBox = true;
+
 
 /****************************
         Globals
@@ -406,7 +413,9 @@ module Component_CherryMX(large, keycolor="#ff00007f", hcolor="Blue", holder=fal
       cube([cmxReducedSize, cmxReducedSize, $itsy], center=true);
       /* Top hole */
       if (cmxHoleSize.z > 0) {
-        translate([0, 0, +(mulHoleSize.z)/2 + $itsy/2]) cube(mulHoleSize + [0, 0, $itsy], center = true);
+        let (holepos = mulHoleSize + [0, 0, $itsy])
+        translate([0, 0, +(mulHoleSize.z)/2 + $itsy/2]) 
+        RoundBox(holepos.x, holepos.y, holepos.z, cmxHoleCornerRadius);
       }
     }
     
@@ -439,7 +448,7 @@ module Component_LCD20x4(holder=false, thickness=$itsy) {
         translate([0, -studSize.y/2])
         cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
       } 
-      let(studSize = [40, 9]) {
+      let(studSize = [35, 9]) {
         translate([22, 23, 0])
         translate([0, +studSize.y/2])
         cube([studSize.x, studSize.y, studHeight + fpThickness/2], center=true);
@@ -457,7 +466,7 @@ module Component_LCD20x4(holder=false, thickness=$itsy) {
     for (i=[-1:2:1]) for(j=[-1:2:1]) {
       translate([i*46.5, j*27.6]) 
       rotate([0, 0, i > 0 ? 0 : 180])
-      HexBoltStud(studHeight, 1, studHeight/2);
+      HexBoltStud(studHeight, 1.5, studHeight/2);
     }    
   }
   /* The holes */
@@ -915,7 +924,7 @@ module Part_BottomScrewStud(holes=false) {
         (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness, center=true);
   }
   else {
-    let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter)
+    let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter + 1.5)
     /* Compute bevel for screw */
     let (insideRadius = (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness)
     let (axisRadius = fpssAxisDiameter/2)
@@ -1017,31 +1026,38 @@ module Part_Panel() {
 }
 
 module Part_Backplate(holes=false) {
+  /* Center is box */
+  translate([0, fpLength/2 + boxThickness, boxThickness/2 + (boxHeight-boxOvershoot-boxOverhangHeight)/2])
   /* Check if hole */
-  translate([0, fpLength/2 + boxThickness, boxHeight/2])
   if (holes) {
     /* The main hole */
     translate([0, -boxThickness/2, 0])
     rotate([90, 0, 0])
     RoundBox(bpWidth, bpHeight, boxThickness + $itsy, bpCornerRadius);
-    /* The inset hole */
-    translate([0, -(boxThickness + $itsy)/2 - bpInsetThickness, 0])
+    /* The Dock hole */
+    translate([0, -(boxThickness + $itsy)/2 - (boxThickness - bpDockThickness), 0])
     rotate([90, 0, 0])
-    RoundBox(bpWidth + 2*bpInset.x, bpHeight + 2*bpInset.y, boxThickness + $itsy, bpCornerRadius);
+    RoundBox(bpWidth + 2*bpDock.x, bpHeight + 2*bpDock.y, boxThickness + $itsy, bpCornerRadius);
   }
   else {
-    
     /* The main plate */
     color(bpColor)
-    union() {      
-      /* The inset part */
-      translate([0, -(boxThickness - bpInsetThickness)/2 - bpInsetThickness, 0])
+    difference() {
+      /* Make the plate*/
+      union() {      
+        /* The dock part */
+        translate([0, -bpDockThickness/2 - (boxThickness - bpDockThickness), 0])
+        rotate([90, 0, 0])
+        RoundBox(bpWidth + 2*bpDock.x, bpHeight + 2*bpDock.y, bpDockThickness, bpCornerRadius);
+        /* The plate part*/
+        translate([0, -(boxThickness - bpDockThickness)/2, 0])
+        rotate([90, 0, 0])
+        RoundBox(bpWidth, bpHeight, (boxThickness - bpDockThickness), bpCornerRadius);
+      }
+      /* The inset */
+      translate([0, -(boxThickness - bpDockThickness)/2 - bpInsetThickness - $itsy/2, 0])
       rotate([90, 0, 0])
-      RoundBox(bpWidth + 2*bpInset.x, bpHeight + 2*bpInset.y, boxThickness - bpInsetThickness, bpCornerRadius);
-      /* The main hole */
-      translate([0, -bpInsetThickness/2, 0])
-      rotate([90, 0, 0])
-      RoundBox(bpWidth, bpHeight, bpInsetThickness, bpCornerRadius);
+      RoundBox(bpWidth - bpInset.x, bpHeight- bpInset.y, (boxThickness - bpDockThickness  + $itsy), bpCornerRadius);
     }
     
   }
@@ -1124,6 +1140,7 @@ module Part_Box() {
     Entry point
 *****************************/
 if (renderPanel) {
+  translate([0, 0, explode])
   Part_Panel();
 }
 
@@ -1132,33 +1149,6 @@ if (renderBox) {
 }
 
 if (renderBackplate) {
+  translate([0, explode, 0])
   Part_Backplate();
-}
-
-*union() {
-  let(studTopHeight = fpssAxisHeight + fpssStudHeight + fpssStudInsertHeight)
-  let (studTopDiameter = 2*fpssWallThickness + fpssStudInsertDiameter) {
-    /* Top stud */
-    translate([0, 0, studTopHeight])
-    Component_ScrewStudTop(
-      fpssAxisDiameter, fpssAxisHeight,
-      fpssBaseThickness, fpThickness/2, fpssBevelHeight, 
-      fpssStudDiameter, fpssStudHeight, 
-      fpssStudInsertHeight, fpssStudInsertDiameter, 
-      fpssWallThickness);     
-    /* Bottom stud */
-    translate([0, 0, -30]) {
-      Component_ScrewStudBottom(
-        30 /*height*/, studTopDiameter + fpssDockThickness,
-        fpssAxisDiameter, fpssCapHeight, /*capBevelHeight*/3,
-        fpssDockHeight, studTopDiameter, 
-        fpssBaseThickness, boxThickness/2, fpssBevelHeight,
-        fpssWallThickness);
-      translate([0, 0, -boxThickness/2])
-      cylinder(boxThickness, 
-        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness,
-        (studTopDiameter + fpssDockThickness)/2 - fpssWallThickness, center=true);
-    }
-    
-  }
 }
