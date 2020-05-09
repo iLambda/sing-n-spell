@@ -17,6 +17,14 @@ boxColor = "Red";
 boxThickness = 4;
 boxPosNucleo = [-82, -30];
 
+/* [Backplate] */
+bpWidth = 100;
+bpHeight = 40;
+bpColor = "Crimson";
+bpCornerRadius = 10;
+bpInset = [5, 5];
+bpInsetThickness = 1;
+
 /* [Front panel] */
 fpWidth = 180;
 fpLength = 140;
@@ -118,9 +126,11 @@ renderPanelGutters = true;
 renderPanelParts = true;
 renderPanelScrewStuds = true;
 renderPanelKeyboard = true;
+renderBackplateParts = true;
 
 /* [Rendering] */
 renderPanel = true;
+renderBackplate = true;
 renderBox = true;
 
 /****************************
@@ -603,64 +613,12 @@ module Component_Speaker(radius) {
   }
 }
 
-module Component_LightToggle_Studs_v2(height=$itsy, hollow=true, additional_radius=0) {
-  difference() {
-    cylinder(height, 5.5+additional_radius, 5.5+additional_radius, center=true);
-    if(hollow) {
-      cylinder(height+$bitsy, 2, 2, center=true);
-    }
-  }
-}
-
-module Component_LightToggle_Studs(top=true, bottom=true, circuit_thickness=2) {
-  /* Breadboard */
-  %translate([0, 0, -8-circuit_thickness/2])
-  cube([12.3, 45, circuit_thickness], center=true);
-  /* Studs */
-  if (top) {
-    translate([0, -15, (-8-fpThickness/2)/2])
-    {
-      difference() {
-        /* The stud's body */
-        union() {
-          Hexagon(9, 8-fpThickness/2);
-        }      
-        /* The nut holder */
-        hull() {
-          Hexagon(6.5, 3.5);
-          translate([0, -10, 0])
-          Hexagon(6.5, 3.5);
-        }
-        /* The axis */
-        cylinder(10, 2, 2, center=true);
-      }
-    }
-  }
-  if(bottom) {
-    translate([0, 15, (-8-fpThickness/2)/2])
-    {
-      difference() {
-        /* The stud's body */
-        union() {
-          Hexagon(9, 8-fpThickness/2);
-        }      
-        /* The nut holder */
-        hull() {
-          Hexagon(6.5, 3.5);
-          translate([0, 10, 0])
-          Hexagon(6.5, 3.5);
-        }
-        /* The axis */
-        cylinder(10, 2, 2, center=true);
-      }
-    }
-  }
-}
-
 module Component_LightToggle(hcolor="Blue", holder=false, side=true, $itsy=$itsy) {
   /* Check if we're doing holders */
   if (holder) {
     /* Rotate everything since we're upside down */
+    let (ltglSizeSide = ltglSize.y)
+    let (ltglOffset = side ? 0.5 : 2)
     color(fpColor)
     rotate([180, 0, 0]) 
     translate([0, 0, fpThickness]) {
@@ -669,11 +627,11 @@ module Component_LightToggle(hcolor="Blue", holder=false, side=true, $itsy=$itsy
         union() {        
           /* If not side, rotate */
           /* The studs */
-          translate([ltglSize.x/2 + ltglStudThickness + 6/2, 0, 0])
+          translate([ltglSizeSide/2 + ltglStudThickness + 6/2 + ltglOffset, 0, 0])
           rotate([0, 0, 0])
           HexBoltStud(ltglStudHeight, ltglStudThickness, ltglStudHeight/2);
           /* The studs */
-          translate([-(ltglSize.x/2 + ltglStudThickness + 6/2), 0, 0])
+          translate([-(ltglSizeSide/2 + ltglStudThickness + 6/2 + ltglOffset), 0, 0])
           rotate([0, 0, 180])
           HexBoltStud(ltglStudHeight, ltglStudThickness, ltglStudHeight/2);
         }
@@ -1058,6 +1016,37 @@ module Part_Panel() {
   }
 }
 
+module Part_Backplate(holes=false) {
+  /* Check if hole */
+  translate([0, fpLength/2 + boxThickness, boxHeight/2])
+  if (holes) {
+    /* The main hole */
+    translate([0, -boxThickness/2, 0])
+    rotate([90, 0, 0])
+    RoundBox(bpWidth, bpHeight, boxThickness + $itsy, bpCornerRadius);
+    /* The inset hole */
+    translate([0, -(boxThickness + $itsy)/2 - bpInsetThickness, 0])
+    rotate([90, 0, 0])
+    RoundBox(bpWidth + 2*bpInset.x, bpHeight + 2*bpInset.y, boxThickness + $itsy, bpCornerRadius);
+  }
+  else {
+    
+    /* The main plate */
+    color(bpColor)
+    union() {      
+      /* The inset part */
+      translate([0, -(boxThickness - bpInsetThickness)/2 - bpInsetThickness, 0])
+      rotate([90, 0, 0])
+      RoundBox(bpWidth + 2*bpInset.x, bpHeight + 2*bpInset.y, boxThickness - bpInsetThickness, bpCornerRadius);
+      /* The main hole */
+      translate([0, -bpInsetThickness/2, 0])
+      rotate([90, 0, 0])
+      RoundBox(bpWidth, bpHeight, bpInsetThickness, bpCornerRadius);
+    }
+    
+  }
+}
+
 module Part_Box() {
   fullHeight = boxOvershoot + boxHeight;
   /* Box is red */
@@ -1084,7 +1073,9 @@ module Part_Box() {
             translate(fpssPosition3) Part_BottomScrewStud(true);
             translate(fpssPosition4) Part_BottomScrewStud(true);
           }
-        } 
+        }
+       /* Remove the backplate */
+       Part_Backplate(holes=true); 
       }
     }
     /* Make overhang */
@@ -1107,7 +1098,7 @@ module Part_Box() {
         translate([rightCaseSize/2, sideHeight/2])
         translate([2*rightCaseSize, 0])
         translate([0, -14.5])
-        Component_LightToggle_Studs_v2(boxOverhangHeight*2, false, 1);
+        cylinder(boxOverhangHeight*2, 5.5+1, 5.5+1, center=true);
       }
     }
     /* Add screw studs */
@@ -1138,6 +1129,10 @@ if (renderPanel) {
 
 if (renderBox) {
   Part_Box();
+}
+
+if (renderBackplate) {
+  Part_Backplate();
 }
 
 *union() {
