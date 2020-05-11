@@ -69,6 +69,16 @@ fpgTop = 0;
 fpgLength = 60;
 fpgShowAlign = false;
 
+/* [Front panel - Text] */
+fptFont = "DejaVu Sans Mono:style=Bold";
+fptColorNormal = "White";
+fptColorAlt = "DeepSkyBlue";
+fptHeight = 0.11;
+fptOffset = 0.1;
+fptLineSpacing = 1.51;
+fptSpacing = 0.5;
+fptSize = 3.1;
+
 /* [Components - Cherry MX] */
 cmxDrawGhosts = true;
 cmxKeycapType = "dcs";  // [dcs, dsa]
@@ -132,6 +142,7 @@ renderPanelGutters = true;
 renderPanelParts = true;
 renderPanelScrewStuds = true;
 renderPanelKeyboard = true;
+renderPanelKeyboardText = true;
 renderBackplateParts = true;
 
 /* [Rendering] */
@@ -260,6 +271,22 @@ module RoundPlateWithHandles(radius=10, axisDistance=3, thickness=1.5, handleThi
       }
     }
   }
+}
+
+module PanelGutterSeparator() {
+  let (carveHeight = fpThickness / 2)
+  let (spkCarveRadius = 1.5+spkLatticeDiameter/2)
+  translate([0, 0, boxHeight]) 
+  translate([0, fpPosLcd.y]) {
+    union() {
+      /* The main gutter carve */
+      translate([0, 0, -carveHeight/2])
+      cube([fpWidth+$itsy, fpLcdGutterDistance - fpLcdGutterSize, carveHeight], center=true); 
+      /* The speaker carve */
+      translate([fpPosSpeaker, 0, -($itsy + fpThickness)/2])
+      cylinder($itsy + fpThickness, spkCarveRadius, spkCarveRadius);
+    }
+  }      
 }
 
 /****************************
@@ -861,6 +888,60 @@ module Group_Voice() {
     Parts
 *****************************/
 
+module Part_Group_Text(words, alt, height, caseSize=rightCaseSize) {
+  /* Check if word not null */
+  if (len(words) != 0)
+  /* For each word */
+  for (word=words) {
+    /* Go to this location */
+      translate([caseSize/2, 0])
+      translate([word[0]*caseSize, 0, 0]) {
+        /* Draw text */
+        if (word[1] && !alt) {
+          color(fptColorNormal)
+          resize(newsize=[0, fptSize, 0], auto=true)  
+          translate([0, 0, -$itsy/2])
+          linear_extrude(height) {
+            offset(fptOffset)
+            text(word[1], spacing=1+fptSpacing,font=fptFont, 10, halign="center", valign="center");
+          }
+        }
+        /* Draw alt text */
+        if (word[2] && alt) {          
+          color(fptColorAlt)
+          translate([0, is_undef(word[1]) ? 0 : -fptSize - fptLineSpacing])
+          resize(newsize=[0, fptSize, 0], auto=true) 
+          translate([0, 0, -$itsy/2])
+          linear_extrude(height) {
+            offset(fptOffset)
+            text(word[2], font=fptFont, spacing=1+fptSpacing, 10, halign="center", valign="center");
+          }
+        }
+      }
+  }
+  
+  
+}
+
+module Part_Keyboard_Text(alt=false, textHeight=fpThickness+$bitsy*2) {
+
+  /* Center ourselves */
+  translate([-fullWidth/2, -fpgLength + fpgTop]) 
+  translate([0, fptHeight]){
+      
+    /* For each part */
+    translate([0, 0]) 
+    Part_Group_Text([[0, "SAVE"], [1, "LOAD"], [2, "FILE"]], alt, textHeight, caseSize=leftCaseSize);
+    translate([0, fpgInsideMargin.y + sideHeight]) 
+    Part_Group_Text([[0.5, undef, "ALT"], [2, "EDIT"]], alt, textHeight, caseSize=leftCaseSize);
+    translate([leftSideWidth + fpgInsideMargin.x, 0]) 
+    Part_Group_Text([[0, "PREV"], [1, "NEXT"], [2, "COMMAND"], [3, "CODE", "PARAM"]], alt, textHeight, caseSize=rightCaseSize);
+    translate([leftSideWidth + fpgInsideMargin.x, fpgInsideMargin.y + sideHeight]) 
+    Part_Group_Text([[0, "LISTEN", "EXPLAIN"], [2, "INDIVIDUAL"], [3, "PITCH", "SPEED"]], alt, textHeight, caseSize=rightCaseSize);
+  }
+  
+}
+
 module Part_Keyboard(holes) {
   /* Check if holes */
   if (holes) {
@@ -1009,6 +1090,12 @@ module Part_Panel() {
       translate([fpPosSpeaker, fpPosLcd.y, -fpThickness])
       Component_Speaker(spkDiameter/2);
       
+      /* The text */
+      if (renderPanelKeyboardText) {        
+        %Part_Keyboard_Text(false);
+        %Part_Keyboard_Text(true);
+      }
+      
       /* Add the LCD studs */
       translate(fpPosLcd)
       Component_LCD20x4(holder=true);        
@@ -1141,22 +1228,6 @@ module Part_Box() {
 /****************************
     Entry point
 *****************************/
-module PanelGutterSeparator() {
-  let (carveHeight = fpThickness / 2)
-  let (spkCarveRadius = 1.5+spkLatticeDiameter/2)
-  translate([0, 0, boxHeight]) 
-  translate([0, fpPosLcd.y]) {
-    union() {
-      /* The main gutter carve */
-      translate([0, 0, -carveHeight/2])
-      cube([fpWidth+$itsy, fpLcdGutterDistance - fpLcdGutterSize, carveHeight], center=true); 
-      /* The speaker carve */
-      translate([fpPosSpeaker, 0, -($itsy + fpThickness)/2])
-      cylinder($itsy + fpThickness, spkCarveRadius, spkCarveRadius);
-    }
-  }      
-}
-
 translate([0, 0, explode]) {
   /* Basic panel */
   if (renderPanel) {
@@ -1177,6 +1248,38 @@ translate([0, 0, explode]) {
         PanelGutterSeparator();
       }
     }  
+  }
+}
+
+/* Paint helper */
+*translate([0, 0, boxHeight]) {
+  let (paintZoneThickness = 0.5) 
+  let (alt = false)
+  intersection(){
+  union() {
+    /* The surface plate of the holder */
+    difference() {
+      /* Make the basic shape of the holder */
+      difference() {      
+        /* The base */
+        translate([0, -fpgLength/2 - sideHeight/2 + 2, +paintZoneThickness/2])
+        cube([fpWidth+4, fpgLength+2, paintZoneThickness], center=true);
+        /* Cut what's too much */
+        translate([0, +fpgLength/2 - fpgLength - fpLength/2 - 2, 0])
+        cube([fpWidth + $itsy, fpgLength, $itsy], center=true);
+      }
+      /* Remove the text */
+      Part_Keyboard_Text(alt, $itsy*6 + paintZoneThickness);
+    }
+    /* The bottom */
+    translate([0, -fpLength/2 - fpThickness/2 + 1, -5 + paintZoneThickness])
+    cube([20, 2, 10], center=true);
+    /* The side */
+    translate([-fpWidth/2 - 1, -sideHeight/2 - fpgLength/2, -5 + paintZoneThickness])
+    cube([2, 20, 10], center=true);
+  }
+  //translate([-10, -35, -10])
+  //cube([30, 30, 200]);
   }
 }
 
