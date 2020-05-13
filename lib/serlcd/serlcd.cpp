@@ -14,6 +14,9 @@ SerialLCD::SerialLCD(PinName sda, PinName scl, uint8_t addr)
     this->_i2c = new I2C(sda, scl);
     this->_i2cAddr = addr << 1;
 
+    /* Wait a bit */
+    ThisThread::sleep_for(500);
+
     /* Init */
     init();
 }
