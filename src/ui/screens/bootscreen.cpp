@@ -1,19 +1,20 @@
 #include "ui/display.h"
+#include "ui/helpers/draw.h"
 
 #include "keymapscreen.h"
 #include "bootscreen.h"
 
-const uint8_t ui::screen::BootScreen::SCREEN_ID = 0;
-
-ui::screen::BootScreen::BootScreen() {
+void ui::screen::BootScreen::reset(void* state) {
+    /* Get self */
+    auto self = (BootScreen*)state;
     /* Initialize */
-    this->m_frame = 0;
+    self->m_frame = 0;
 }
 
 void ui::screen::BootScreen::render(void* state, SerialLCD* display) {
     /* Write */
-    display->setCursor(5, 2);
-    display->write("Loading...");
+    screen_write_centered(display, "Sing'n'Spell", 1);
+    screen_write_centered(display, BUILD_VERSION_CONFIG, 2);
 }
 
 void ui::screen::BootScreen::update(void* state, bool* dirty) {

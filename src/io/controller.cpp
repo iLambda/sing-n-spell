@@ -1,5 +1,7 @@
 #include "controller.h"
 #include "midi.h"
+#include "pin.h"
+
 
 Thread io::Controller::m_threadInput;
 Thread io::Controller::m_threadMidi;
@@ -13,7 +15,7 @@ RawSerial* io::Controller::m_midi = nullptr;
 
 void io::Controller::run() {
     /* Make MIDI */
-    Controller::m_midi = new RawSerial(D1, D0, MIDI_BAUD_RATE);
+    //Controller::m_midi = new RawSerial(D1, D0, MIDI_BAUD_RATE);
     /* Start the UI and event threads */
     Controller::m_threadInput.start(callback(&Controller::inputThread));
     Controller::m_threadInput.set_priority(IO_CONTROLLER_THREAD_PRIORITY_INPUT);
@@ -42,9 +44,21 @@ void io::Controller::isrMidi(RawSerial* self) {
 
 void io::Controller::updateButtons() {
     /* Peripherals to read */
-    // static DigitalIn ser(NC);
-    // static DigitalOut clk(NC, 1);
-    // static DigitalOut srclk(NC, 1);
+    static DigitalIn prev(PINMAP_KBD_PREV, PinMode::PullUp);
+    static DigitalIn next(PINMAP_KBD_NEXT, PinMode::PullUp);
+    static DigitalIn cmdPhon(PINMAP_KBD_CMDPHON, PinMode::PullUp);
+    static DigitalIn individual(PINMAP_KBD_INDIVIDUAL, PinMode::PullUp);
+    static DigitalIn alt(PINMAP_KBD_ALT, PinMode::PullUp);
+    static DigitalIn prelisten(PINMAP_KBD_PRELISTEN, PinMode::PullUp);
+    static DigitalIn load(PINMAP_KBD_LOAD, PinMode::PullUp);
+    static DigitalIn save(PINMAP_KBD_SAVE, PinMode::PullUp);
+    /* Peripherals to write */
+    static BusOut busOut(CTRL_BUS_OUT(PINMAP_KBD_INDIVIDUAL_OUT, PINMAP_KBD_CMDPHON_OUT));
+
+
+    /* Write output data */
+    busOut.write(Controller::m_outState.value);
+    
     /* 
         This routine must be 'atomic'.    
         Lock as critical the following code.
@@ -55,9 +69,16 @@ void io::Controller::updateButtons() {
     /* Save for old state */
     Controller::m_buttonsAbsoluteOld = Controller::m_buttonsAbsolute;
 
-    /* TODO read input data */
-
-    /* TODO write input data */
+    /* Read buttons (!INVERTED) */
+    Controller::m_buttonsAbsolute.prev = !prev.read();
+    Controller::m_buttonsAbsolute.next = !next.read();
+    Controller::m_buttonsAbsolute.cmdphon = !cmdPhon.read();
+    Controller::m_buttonsAbsolute.individual = !individual.read();
+    Controller::m_buttonsAbsolute.prelisten = !prelisten.read();
+    Controller::m_buttonsAbsolute.load = !load.read();
+    Controller::m_buttonsAbsolute.save = !save.read();
+    /* Read modkeys & stateful toggles */
+    Controller::m_inState.alt = !alt.read();
     
     /* Write 'pressed' state for buttons */
     Controller::m_inState.buttons.value = 
@@ -106,9 +127,9 @@ void io::Controller::midiThread() {
 
 void io::Controller::inputThread() {
     /* Start MIDI thread and hook interrupt */
-    Controller::m_threadMidi.start(callback(&Controller::midiThread));
-    Controller::m_threadMidi.set_priority(IO_CONTROLLER_THREAD_PRIORITY_MIDI);
-    Controller::m_midi->attach(callback(&Controller::isrMidi, Controller::m_midi));
+    //Controller::m_threadMidi.start(callback(&Controller::midiThread));
+    //Controller::m_threadMidi.set_priority(IO_CONTROLLER_THREAD_PRIORITY_MIDI);
+    //Controller::m_midi->attach(callback(&Controller::isrMidi, Controller::m_midi));
 
     /* Thread loop */
     while(1) {

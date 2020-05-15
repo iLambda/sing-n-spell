@@ -20,7 +20,7 @@ namespace synth {
     struct keyentry_t {
         /* The pitch */
         uint8_t pitch;
-        /* The key mode */
+        /* The key ode */
         keymode_t mode;
         /* The corresponding voice sample */
         word_t* word;

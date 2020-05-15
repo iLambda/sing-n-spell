@@ -1,0 +1,8 @@
+{
+    "target_overrides": {
+      "*": {
+        "platform.error-all-threads-info": true,
+        "platform.error-filename-capture-enabled": true
+      }
+    }
+  }

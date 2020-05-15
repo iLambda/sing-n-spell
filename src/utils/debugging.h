@@ -13,7 +13,9 @@ namespace dbg {
 
     __attribute__((always_inline)) inline void setLEDs(uint8_t state) {
         /* Set */
-        dbg::leds->write(state);
+        #ifdef BUILD_CONFIG_DEBUG
+            dbg::leds->write(state);
+        #endif
     }
     
 }

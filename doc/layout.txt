@@ -1,0 +1,6 @@
+Global	         C3 	     
+Pitch 	    	 20
+Delay 20    127/127
+OOK AAK OOF EEH [-]
+
+phonemes entre [-] et commandes entre {-}

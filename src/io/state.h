@@ -9,10 +9,7 @@ namespace io {
         /* The value as a bitstring */
         uint8_t value;
         /* The value as a structured datatype */
-        struct {
-            /* The edit mode switch */
-            uint8_t edit : 1;
-            
+        struct {            
             /* The prelisten key */
             uint8_t prelisten : 1;
             /* The save key */
@@ -56,7 +53,9 @@ namespace io {
         /* The encoders */
         inputstate_encoders_t encoders;
         /* The alt key */
-        uint8_t alt;
+        uint8_t alt : 1;
+        /* The edit mode switch */
+        uint8_t edit : 1;
     };
 
     /* Accumulate an input state */
@@ -68,15 +67,23 @@ namespace io {
         /* Accumulate encoders */        
         accumulator.encoders.value = 
             __QADD8(accumulator.encoders.value, delta.encoders.value);
+        /* Edit is not accumulated */
+        accumulator.edit = delta.edit;
     }
 
     /* The output state */
-    struct outputstate_t {
-        /* The individual mode selector */
-        uint8_t individual : 1; 
-        /* The command/phoneme mode selector */
-        uint8_t cmdphon : 1; 
+    union outputstate_t {
+        struct {
+            /* The individual mode selector */
+            uint8_t individual : 1; 
+            /* The command/phoneme mode selector */
+            uint8_t cmdphon : 1; 
+        };
+        /* The value */
+        uint8_t value;
     };
+
+    #define CTRL_BUS_OUT(indiv, cmdphon) (indiv),(cmdphon)
 }
 
 #endif

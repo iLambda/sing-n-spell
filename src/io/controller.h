@@ -62,6 +62,8 @@ namespace io {
             static inputstate_t get();
             /* Sets the state */
             static void set(const outputstate_t& state);
+            /* Return the output state */
+            __STATIC_FORCEINLINE outputstate_t& output() { return Controller::m_outState; }
             
         private:
             /* Midi in interrupt */

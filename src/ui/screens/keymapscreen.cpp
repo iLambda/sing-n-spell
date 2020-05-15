@@ -1,0 +1,339 @@
+#include "io/controller.h"
+#include "io/midi.h"
+#include "synth/engine.h"
+#include "ui/display.h"
+#include "ui/screens/spellscreen.h"
+#include "utils/string.h"
+#include "utils/utils.h"
+
+#include "keymapscreen.h"
+
+#define IF_DIRTY(flag, action)      { if (flag) { (action); } }
+
+/* Constant strings (!!!PADDED!!!) */
+const char* const cstr_mode[] = { 
+    "Global", 
+    "Local " 
+};
+const char* const cstr_param[][2] = { 
+    {"Transpose", "Pitch    "}, 
+    {"Speed    ", "Speed    "}     
+};
+const char* const cstr_datamode_brk[] = {
+    "<>", "[]"
+};
+/* Buffers */
+uint8_t frm_line[ui::Display::screenWidth() + 1] = {0};
+uint8_t frm_cmd[ui::Display::screenWidth() + 1] = {0};
+uint8_t frm_buf_before[6] = {0};
+uint8_t frm_buf_after[1] = {0};
+char str_data_pos[] = "--/--";
+char str_data_name[ui::Display::screenWidth() - utils::size(str_data_pos) + 1] = {0};
+char str_buf_note[5] = {0};
+char str_buf_itoa[4] = {0};
+
+ui::screen::KeymapScreen::KeymapScreen() : 
+    m_workbench(utils::preserved_constant(synth::worditerator_t::null())) 
+{ }
+
+void ui::screen::KeymapScreen::reset(void* state) {
+    /* Get self */
+    auto self = (KeymapScreen*)state;
+    /* Initialize */
+    self->m_isDirty.value = ~((uint32_t)0);
+    self->m_parameter = utils::preserved_constant(PARAM_PITCH);
+    self->m_paramTarget = utils::preserved_constant(&synth::Engine::key().pitch);
+    self->m_paramValue = utils::preserved_constant(synth::Engine::key().pitch);
+    self->m_datamode = utils::preserved_constant(DATAMODE_PHN);
+    self->m_note = utils::preserved_constant(synth::Engine::note());
+    self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
+    self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
+}
+
+/*******************************************
+ * Draw functions
+ *******************************************/
+
+/* Draw the note */
+MBED_FORCEINLINE void drawNote(SerialLCD* const& display, uint8_t note) {
+    /* Draw note */
+    uint8_t len = io::midi_note_to_cstr(str_buf_note, note);
+    /* Write it */
+    display->setCursor(ui::Display::screenWidth() - len, 0);
+    display->write(str_buf_note);
+}
+
+/* Draw the mode on screen */
+MBED_FORCEINLINE void drawMode(SerialLCD* const& display, synth::keymode_t mode) {
+    /* Write it */
+    display->setCursor(0, 0);
+    display->write(cstr_mode[mode]);
+}
+
+/* Draw the parameter name on screen */
+MBED_FORCEINLINE void drawParamName(SerialLCD* const& display, synth::keymode_t mode, ui::screen::KeymapScreen::Parameter param) {
+    /* Write it */
+    display->setCursor(0, 1);
+    display->write(cstr_param[param][mode]);
+}
+
+/* Draw the parameter name on screen */
+MBED_FORCEINLINE void drawParamValue(SerialLCD* const& display, ui::screen::KeymapScreen::Parameter param, uint8_t* src) {
+    /* Place cursor */
+    display->setCursor(ui::Display::screenWidth() - 2, 1);
+    /* If pointer not null, write */
+    if (src != nullptr) {
+        /* Write number */
+        utils::uint8_hex_to_cstr(str_buf_itoa, *src);
+        display->write(str_buf_itoa);
+    } else {
+        /* Write no value */
+        display->write("--");
+    }
+}
+
+MBED_FORCEINLINE uint8_t drawPhon(uint8_t* const& screenbuf, const int& x, const uint8_t& phon) {
+    /* Check */
+    if (x < 0) return 0;
+    /* Convert */
+    utils::uint8_hex_to_str(str_buf_itoa, phon);
+    /* Copy */
+    screenbuf[x] = str_buf_itoa[1];
+    if (x > 0) { screenbuf[x - 1] = str_buf_itoa[0]; return 2; }
+    /* Len */
+    return 1;
+}
+
+/* Draw the current data */
+MBED_FORCEINLINE void drawData(SerialLCD* const& display, const synth::worditerator_t& it) {
+    /* Write frame to buffer */
+    utils::uint8_hex_to_str(&str_data_pos[0], it.position());
+    utils::uint8_hex_to_str(&str_data_pos[3], it.length());
+    /* Write name of command to buffer (don't forget to null terminate it) */
+    utils::ncopy_then_pad(str_data_name, "<UNNAMED>", ' ',  utils::size(str_data_name)-1);
+    /* Print it */
+    display->setCursor(0, 2);
+    display->write(str_data_name);
+    display->write(' ');
+    display->write(str_data_pos);
+}
+
+/* Draw the frame */
+MBED_FORCEINLINE void drawFrame(SerialLCD* const& display, const bool& wholeFrame, const ui::screen::KeymapScreen::DataMode &datamode, const synth::worditerator_t& it) {
+    /* The cursor */
+    int x = ui::Display::screenWidth() - 1;
+    /* Draw the current cmd/phon */
+    frm_line[x--] = cstr_datamode_brk[datamode][1];
+    x -= drawPhon(frm_line, x, it.get());
+    frm_line[x--] = cstr_datamode_brk[datamode][0];
+
+    /* If need to redraw whole frame */
+    if (wholeFrame) {
+        /* Get context */
+        size_t before, after;
+        it.context(
+            utils::size(frm_buf_before), utils::size(frm_buf_after), 
+            frm_buf_before, frm_buf_after, 
+            before, after);
+        /* Go through each element in the context before */
+        for (int b = before - 1; b >= 0; b--) {
+            /* Space */
+            if (x >= 0) { frm_line[x--] = ' ';  }
+            /* Draw phoneme */
+            x -= drawPhon(frm_line, x, frm_buf_before[b]);
+        }
+        /* Fill with blanks */
+        while(x >= 0) { frm_line[x--] = ' '; }
+    }
+    /* Draw the whole */
+    display->setCursor(0, 3);
+    display->write(frm_line, ui::Display::screenWidth());
+}
+
+/*******************************************
+ * Logic
+ *******************************************/
+
+/* Render the screen */
+void ui::screen::KeymapScreen::render(void* state, SerialLCD* display) {
+    /* Get self */
+    auto self = (KeymapScreen*)state;
+
+    /* Draw the mode & note */
+    IF_DIRTY(self->m_isDirty.mode, drawMode(display, synth::Engine::key().mode));
+    IF_DIRTY(self->m_isDirty.note, drawNote(display, synth::Engine::note()));
+    /* Draw the parameter */
+    IF_DIRTY(self->m_isDirty.paramName, drawParamName(display, synth::Engine::key().mode, self->m_parameter.current));
+    IF_DIRTY(self->m_isDirty.paramValue, drawParamValue(display, self->m_parameter.current, self->m_paramTarget.current));
+    /* Draw the frame */
+    bool smthFrameDirty = !!self->m_isDirty.frame || !!self->m_isDirty.frameDatamode;
+    IF_DIRTY(smthFrameDirty, drawFrame(display, !!self->m_isDirty.frame, self->m_datamode.current, synth::Engine::workbenchIterator()));
+    IF_DIRTY(self->m_isDirty.frameData, drawData(display, synth::Engine::workbenchIterator()));
+
+    /* Clean dirty inputs */
+    self->m_isDirty.value = 0x00;
+}
+
+void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
+
+    /* Wait till the screen is drawn, to avoid a weird race condition */
+    Display::dry();
+
+    /* Get self */
+    auto self = (KeymapScreen*)state;
+
+    /** EXTERNAL PARAMETERS **/
+    /* Update note ; if it changed, dirty all relevant inputs */
+    if (utils::preserved_changes_with(self->m_note, synth::Engine::note())) {
+        /* Dirty mode, note, and parameter value */
+        self->m_isDirty.mode = 1;
+        self->m_isDirty.note = 1; 
+        self->m_isDirty.paramValue = 1;
+        self->m_isDirty.frame = 1;
+        self->m_isDirty.frameDatamode = 1;
+        self->m_isDirty.frameData = 1;
+    }
+    /* Update keymode ; if it changed, dirty it */
+    if (utils::preserved_changes_with(self->m_keymode, synth::Engine::key().mode)) {
+        /* Dirty keymode (and parameter name since it can change depending on mode ) */
+        self->m_isDirty.mode = 1;
+        self->m_isDirty.paramName = 1;
+    }
+    /* If iterator changed */
+    if (utils::preserved_changes_with(self->m_workbench, synth::Engine::workbenchIterator())) {
+        /* Dirty */
+        self->m_isDirty.frame = 1;
+        self->m_isDirty.frameData = 1;
+        self->m_isDirty.frameDatamode = 1;
+    }
+    /* If param target changed */
+    if (utils::preserved_has_changed(self->m_paramTarget)) {
+        /* Dirty */
+        self->m_isDirty.paramValue = 1;
+        /* Iterate */
+        utils::preserved_iterate(self->m_paramTarget);
+    }
+    
+    /* If param value changed */
+    if (self->m_paramTarget.current && utils::preserved_changes_with(self->m_paramValue, *self->m_paramTarget.current)) {
+        /* Dirty value */
+        self->m_isDirty.paramValue = 1;
+    }
+
+    /** INTERNAL PARAMETERS **/
+    /* If parameter has changed, dirty it */
+    if (utils::preserved_has_changed(self->m_parameter)) {
+        /* Dirty name and value */
+        self->m_isDirty.paramName = 1;
+        self->m_isDirty.paramValue = 1;
+        /* Iterate */
+        utils::preserved_iterate(self->m_parameter);
+    }
+    /* If datamode changed, dirty it */
+    if (utils::preserved_has_changed(self->m_datamode)) {
+        /* Dirty datamode */
+        self->m_isDirty.frameDatamode = 1;
+        /* Iterate */
+        utils::preserved_iterate(self->m_datamode);
+    }
+
+    /* Check if need to flag dirty */
+    *dirty = self->m_isDirty.value != 0;
+}
+
+void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs, io::outputstate_t& outputs) {
+    /* Static data */
+    static io::outputstate_t output;
+    /* Get self */
+    auto self = (KeymapScreen*)state;
+
+    /* If this is not the current screen, return */
+    if (Display::current() != KeymapScreen::getID()) {
+        return;
+    }
+
+    /**** OUTPUT ****/
+    /* Check if alt has been pressed */
+    if (!inputs.alt) {
+        /* Alt is not pressed */
+        output.cmdphon = self->m_datamode.current == DATAMODE_CMD;
+        output.individual = synth::Engine::key().mode == synth::KEY_MODE_LOCAL;
+    } else {
+        /* Alt is pressed */
+        /* Reset ; TODO !!! */
+        output.value = 0x00;
+    }
+    /* Send output */
+    io::Controller::set(output);
+
+    /**** INPUT ****/
+    /* Load button */
+    if (inputs.buttons.load) {
+        /* Go to spell screen */
+        if (inputs.alt) {
+            ui::Display::go(SpellScreen::getID());
+        }
+    }
+
+
+    /* Individual switch */
+    if (inputs.buttons.individual) {
+        /* Check alt */
+        if (!inputs.alt) {
+            /* Compute toggled mode */
+            auto mode =
+                synth::Engine::key().mode == synth::KEY_MODE_GLOBAL
+                    ? synth::KEY_MODE_LOCAL
+                    : synth::KEY_MODE_GLOBAL;
+            /* And change it */
+            synth::Engine::key().mode = mode;
+        }
+    }
+
+    /* CMD/PHN swith */
+    if (inputs.buttons.cmdphon) {
+        /* Check alt */
+        if (!inputs.alt) {
+            /* Compute toggled mode */
+            auto mode = self->m_datamode.current == DATAMODE_PHN ? DATAMODE_CMD : DATAMODE_PHN;
+            /* And change it */
+            utils::preserved_update(self->m_datamode, mode);
+        }
+    }
+
+    /* Next & previous buttons */
+    if (inputs.buttons.next || inputs.buttons.prev) {
+        /* Check if alt */
+        if (!inputs.alt) {
+            /* Go next */
+            if (inputs.buttons.next) { synth::Engine::workbenchIterator().next(); }
+            /* Go previous */
+            else { synth::Engine::workbenchIterator().previous(); }
+        } else {
+            /* Go next */
+            if (inputs.buttons.next) { synth::Engine::workbenchIterator().first(); }
+            /* Go previous */
+            else { synth::Engine::workbenchIterator().end(); }
+        }
+    }
+
+    /* Pitch encoder */
+    if (inputs.encoders.pitch) {
+        /* Select the parameter */
+        utils::preserved_update(self->m_parameter, !inputs.alt ? PARAM_PITCH : PARAM_SPEED);
+        /* Select the parameter */
+        switch (self->m_parameter.current) {
+            case PARAM_PITCH: 
+                utils::preserved_update(self->m_paramTarget, &synth::Engine::key().pitch); 
+                break;
+            case PARAM_SPEED: 
+                utils::preserved_update(self->m_paramTarget, (uint8_t*)nullptr); 
+                // utils::preserved_update(self->m_paramTarget, &synth::Engine::key().speed);   
+                break;
+        }
+        /* Add to parameter */
+        if (self->m_paramTarget.current) {
+            *self->m_paramTarget.current += inputs.encoders.pitch;
+        }
+    }
+}

@@ -50,7 +50,7 @@
 #define LCD_MOVELEFT 0x00
 
 // buffer 
-#define LCD_I2C_BUFFER_LEN 25
+#define LCD_I2C_BUFFER_LEN 20*4+1
 
  
 /**

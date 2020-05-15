@@ -61,7 +61,7 @@ namespace synth {
                 return wordOf(Engine::m_key);
             }
             /* Returns an iterator over the current word */
-            __STATIC_FORCEINLINE const worditerator_t& wordIterator() {
+            __STATIC_FORCEINLINE const worditerator_t& workbenchIterator() {
                 /* Returns the word iterator */
                 return *Engine::m_workbenchIterator;
             }
@@ -97,7 +97,7 @@ namespace synth {
             __STATIC_FORCEINLINE void outOfMemory() {
                 /* Notify */
                 /* TODO : change */
-                dbg::printf("Out of memory !!!");
+                //dbg::printf("Out of memory !!!");
             }
 
 

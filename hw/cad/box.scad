@@ -74,9 +74,9 @@ fptFont = "DejaVu Sans Mono:style=Bold";
 fptColorNormal = "White";
 fptColorAlt = "DeepSkyBlue";
 fptHeight = 0.11;
-fptOffset = 0.1;
+fptOffset = 0.15;
 fptLineSpacing = 1.51;
-fptSpacing = 0.5;
+fptSpacing = 0.25;
 fptSize = 3.1;
 
 /* [Components - Cherry MX] */
@@ -899,22 +899,22 @@ module Part_Group_Text(words, alt, height, caseSize=rightCaseSize) {
         /* Draw text */
         if (word[1] && !alt) {
           color(fptColorNormal)
-          resize(newsize=[0, fptSize, 0], auto=true)  
+          //resize(newsize=[0, fptSize, 0], auto=true)  
           translate([0, 0, -$itsy/2])
           linear_extrude(height) {
             offset(fptOffset)
-            text(word[1], spacing=1+fptSpacing,font=fptFont, 10, halign="center", valign="center");
+            text(word[1], spacing=1+fptSpacing,font=fptFont, fptSize, halign="center", valign="center");
           }
         }
         /* Draw alt text */
         if (word[2] && alt) {          
           color(fptColorAlt)
           translate([0, is_undef(word[1]) ? 0 : -fptSize - fptLineSpacing])
-          resize(newsize=[0, fptSize, 0], auto=true) 
+          //resize(newsize=[0, fptSize, 0], auto=true) 
           translate([0, 0, -$itsy/2])
           linear_extrude(height) {
             offset(fptOffset)
-            text(word[2], font=fptFont, spacing=1+fptSpacing, 10, halign="center", valign="center");
+            text(word[2], font=fptFont, spacing=1+fptSpacing, fptSize, halign="center", valign="center");
           }
         }
       }
@@ -931,13 +931,13 @@ module Part_Keyboard_Text(alt=false, textHeight=fpThickness+$bitsy*2) {
       
     /* For each part */
     translate([0, 0]) 
-    Part_Group_Text([[0, "SAVE"], [1, "LOAD"], [2, "FILE"]], alt, textHeight, caseSize=leftCaseSize);
+    Part_Group_Text([[0, "SAVE"], [1, "LOAD", "SPELL"], [2, "FILE"]], alt, textHeight, caseSize=leftCaseSize);
     translate([0, fpgInsideMargin.y + sideHeight]) 
     Part_Group_Text([[0.5, undef, "ALT"], [2, "EDIT"]], alt, textHeight, caseSize=leftCaseSize);
     translate([leftSideWidth + fpgInsideMargin.x, 0]) 
-    Part_Group_Text([[0, "PREV"], [1, "NEXT"], [2, "COMMAND"], [3, "CODE", "PARAM"]], alt, textHeight, caseSize=rightCaseSize);
+    Part_Group_Text([[0, "PREV", "START"], [1, "NEXT", "END"], [2, "CMD"], [3, "CODE", "PARAM"]], alt, textHeight, caseSize=rightCaseSize);
     translate([leftSideWidth + fpgInsideMargin.x, fpgInsideMargin.y + sideHeight]) 
-    Part_Group_Text([[0, "LISTEN", "EXPLAIN"], [2, "INDIVIDUAL"], [3, "PITCH", "SPEED"]], alt, textHeight, caseSize=rightCaseSize);
+    Part_Group_Text([[0, "LISTEN", "EXPLAIN"], [2, "DISCRETE", "STUTTER"], [3, "PITCH", "SPEED"]], alt, textHeight, caseSize=rightCaseSize);
   }
   
 }

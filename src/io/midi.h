@@ -144,7 +144,7 @@ namespace io {
         return controller < MIDI_CC_ALLSOUNDOFF;
     }
     /* Note to string */
-    inline void midi_note_to_cstr(char* str, uint8_t note) {
+    inline uint8_t midi_note_to_cstr(char* str, uint8_t note) {
         /* Store intermediate result */
         uint8_t tmp = __UQSUB8(note & 0x7F, 21);
         /* Compute octave and note */
@@ -152,7 +152,10 @@ namespace io {
         uint8_t octave = (tmp + 9) / 12;
         /* Put note together */
         strcpy(str, notes[semitone]);
+        uint8_t notelen = strlen(str);
         itoa(octave, str + strlen(str), 10);
+        /* Return length */
+        return notelen + 1;
     }
 };
 

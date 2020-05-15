@@ -8,6 +8,7 @@
 #define UI_DISPLAY_THREAD_PRIORITY_UI         osPriorityNormal
 #define UI_DISPLAY_THREAD_QUEUE_SIZE          16
 #define UI_DISPLAY_THREAD_FLAG_UI_DIRTY       0x01
+#define UI_DISPLAY_THREAD_FLAG_UI_CLEAR       0x02
 #define UI_DISPLAY_THREAD_FLAG_EVENT_DRAWN    0x01
 
 #define UI_DISPLAY_SERLCD_TX                  NC
@@ -16,7 +17,8 @@
 #include <rtos.h>
 #include <serlcd.h>
 
-#include "ui/screens/screen.h"
+#include "io/state.h"
+#include "ui/screen.h"
 
 namespace ui {
 
@@ -47,6 +49,10 @@ namespace ui {
             /* The current screen id */
             static int8_t m_currentScreen;
 
+            /* The input screen mutex */
+            static Mutex m_inputMutex;
+            
+
         private:
             /* Create a display */
             Display() {}
@@ -63,20 +69,24 @@ namespace ui {
             static bool go(uint8_t id);
             /* The current screen id */
             static int8_t current();
+            /* Wait until screen repaint is over (WORKS ONLY IN EVENT THREAD !) */
+            static void dry();
 
             /* The screen width */
-            __STATIC_FORCEINLINE uint8_t screenWidth() { return 20; }
+            __STATIC_FORCEINLINE constexpr uint8_t screenWidth() { return 20; }
             /* The screen height */
-            __STATIC_FORCEINLINE uint8_t screenHeight() { return 4; }
+            __STATIC_FORCEINLINE constexpr uint8_t screenHeight() { return 4; }
 
         private:
             /* Repaint */
-            static void repaint();
+            static void repaint(const bool& clear);
             /* Dirty */
-            static void dirty();
+            static void dirty(const bool& clear);
             /* Draw the frame */
             static void drawFrame();
 
+            /* The input handler */
+            static void inputHandler(const io::inputstate_t& inputs);
             /* The UI thread */
             static void uiThread();
             /* The event thread */

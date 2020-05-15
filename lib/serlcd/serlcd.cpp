@@ -237,7 +237,17 @@ size_t SerialLCD::write(const char *str)
 {
   if (str == NULL)
     return 0;
-  return write((const uint8_t *)str, strlen(str));
+
+  size_t n = 0;
+  beginTransmission(); // transmit to device
+  while (*str)
+  {
+    transmit(*str++);
+    n++;
+  }                  //while
+  endTransmission(); //Stop transmission
+  ThisThread::sleep_for(10);         //
+  return n;
 }
 
 /*

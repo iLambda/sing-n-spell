@@ -4,7 +4,15 @@
 #include <mbed.h>
 #include <rtos.h>
 
+#include "synth/tts/lexicon.h"
+
 #define SPEAKJET_CODE_END       0xFF
+
+#define AUDIO_SPEAKJET_THREAD_PRIORITY       osPriorityHigh
+#define AUDIO_SPEAKJET_THREAD_FLAG_STOP            0x01
+#define AUDIO_SPEAKJET_THREAD_FLAG_PLAY            0x02
+#define AUDIO_SPEAKJET_THREAD_FLAG_READY           0x04
+#define AUDIO_SPEAKJET_THREAD_FLAG_DONE_SPEAK      0x08
 
 namespace audio {
     
@@ -18,27 +26,35 @@ namespace audio {
                 /* The reset pin */
                 DigitalOut* m_reset;
                 /* The ready pin */
-                DigitalIn* m_ready;
+                InterruptIn* m_ready;
+                /* The speaking pin */
+                InterruptIn* m_speaking;
+
+                /* The current word */
+                synth::worditerator_t* m_word;
+                /* The word mutex */
+                Mutex m_wordMutex;
+
+                /* The speaking thread */
+                Thread m_speakThread;
 
             public:
                 /* Create a SpeakJet interface */
-                SpeakJet(PinName tx, PinName rst, PinName ready);
+                SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking);
 
             private:
-                /* Is the device ready ? */
-                MBED_FORCEINLINE bool isReady() { return !this->m_ready->read(); }
-                /* Wait until ready */
-                MBED_FORCEINLINE void waitForReady() { 
-                    while (!this->isReady()) {
-                        ThisThread::sleep_for(1);
-                    } 
-                }
+                /* The speak thread */
+                void speakThread();
+                /* On ready interrupt */
+                void onReady();
+                /* On done speaking interrupt */
+                void onDoneSpeaking();
                 
             public:
-                /* Speak a single code */
-                void speak(uint8_t code);
-                /* Speak every code in the array, until 0xFF. */
-                void speak(uint8_t* codes);
+                /* Speak a word */
+                void speak(const synth::worditerator_t& word);
+                /* Stop speaking */
+                void stop();
         };
 
     }

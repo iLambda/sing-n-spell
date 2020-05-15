@@ -24,9 +24,11 @@ void Engine::run() {
         /* Default pitch for local mode is engine note default */
         Engine::m_keymap.keys[i].pitch = ENGINE_NOTE_DEFAULT;
     }
-    
+    /* Initialize the lexicon */
+    synth::Lexicon::setup();
     /* Allocate the workbench word, and assert it worked */
-    MBED_ASSERT(Lexicon::alloc(Engine::m_workbench, ENGINE_WORKBENCH_WORD_SIZE));
+    bool success = Lexicon::alloc(Engine::m_workbench, ENGINE_WORKBENCH_WORD_SIZE);
+    MBED_ASSERT(success);
     /* Make iterator. It is never regenerated since the workbench buffer never moves */
     Engine::m_workbenchIterator = new worditerator_t(Lexicon::iterator(Engine::m_workbench));
     
@@ -38,13 +40,20 @@ void Engine::run() {
 }
 
 /* On midi received */
-void midiReceived(const io::midimsg_t& midi) {
+void Engine::midiReceived(const io::midimsg_t& midi) {
     /* Check midi msg type */
     /* TODO : SEPARATE THREAD WITH EVENTQUEUE
        SO WE DON'T MISS ANY MIDI MESSAGES */
     switch (io::midi_message_type(midi)) {
         /* CLassic messages */
         case io::MIDI_TYPE_NOTEON:
+            /*if (Engine::editMode()) {
+                Engine::select(midi.data.key);
+
+            }*/
+
+            return;
+
         case io::MIDI_TYPE_NOTEOFF:
         case io::MIDI_TYPE_START:
         case io::MIDI_TYPE_STOP: {
@@ -96,7 +105,7 @@ void Engine::select(uint8_t midinote) {
     if (Engine::wordOf(nextKey) == Engine::wordOf(oldKey)) { return; }
 
     /* Reset the iterator to first frame */
-    Engine::wordIterator().first();
+    Engine::workbenchIterator().first();
     /* Copy the keymap data into the workbench 
        (copy cannot fail, workbench is always biggest) */
     Lexicon::copy(Engine::word(), Engine::m_workbench);
