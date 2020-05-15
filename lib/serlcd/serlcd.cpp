@@ -171,7 +171,7 @@ void SerialLCD::setCursor(uint8_t col, uint8_t row)
  * uint8_t   location - character number 0 to 7
  * uint8_t[] charmap  - uint8_t array for character
  */
-void SerialLCD::createChar(uint8_t location, uint8_t charmap[])
+void SerialLCD::createChar(uint8_t location, const uint8_t charmap[])
 {
   location &= 0x7; // we only have 8 locations 0-7
   beginTransmission();

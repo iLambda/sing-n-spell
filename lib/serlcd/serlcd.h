@@ -67,7 +67,7 @@ class SerialLCD
     void clear();
     void home();
     void setCursor(uint8_t col, uint8_t row);
-    void createChar(uint8_t location, uint8_t charmap[]);
+    void createChar(uint8_t location, const uint8_t charmap[]);
     void writeChar(uint8_t location);
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *buffer, size_t size);
