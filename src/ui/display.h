@@ -72,14 +72,21 @@ namespace ui {
             /* Go to screen */
             static bool go(uint8_t id);
             /* Go to screen */
+            template <typename T> __STATIC_FORCEINLINE bool go() {
+                return Display::go(T::getID());
+            }
+            /* Go to screen */
             template <typename T> __STATIC_FORCEINLINE bool go(T& screen) {
                 return Display::go(screen.getID());
             }
             /* The current screen id */
             static int8_t current();
+
             /* Wait until screen repaint is over (WORKS ONLY IN EVENT THREAD !) */
             static void dry();
 
+            /* The screen driver */
+            __STATIC_FORCEINLINE SerialLCD* const& driver() { return Display::m_display; }
             /* The screen width */
             __STATIC_FORCEINLINE constexpr uint8_t screenWidth() { return 20; }
             /* The screen height */
