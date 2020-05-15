@@ -1,4 +1,5 @@
 #include "serlcd.h"
+#include "bitmaps.h"
 #include "io/controller.h"
 #include "ui/display.h"
 #include "ui/helpers/draw.h"
@@ -16,6 +17,9 @@ void ui::screen::SpellScreen::reset(void* state) {
     self->m_isDirty.value = ~((uint32_t)0);
     /* Initialize */
     self->m_cursor = {0};
+    /* Set custom characters */
+    ui::Display::driver()->createChar(1, bmp::lcd::BMP_LCD_SPACE);
+    ui::Display::driver()->createChar(2, bmp::lcd::BMP_LCD_BACKSPACE);
 }
 
 void ui::screen::SpellScreen::render(void* state, SerialLCD* display) {
@@ -31,8 +35,25 @@ void ui::screen::SpellScreen::render(void* state, SerialLCD* display) {
             for (uint8_t i = 0; i < ui::Display::screenWidth(); i++) {
                 /* Compute index */
                 uint8_t index = i + (j * ui::Display::screenWidth());
-                /* Fill the buffer */
-                kbd_line_buf[i] = index % 2 ? ' ' : ('A' + (index/2));
+                /* Spacing */
+                if (index % 2) { 
+                    kbd_line_buf[i] = ' '; 
+                    continue; 
+                }
+                /* Add characters */
+                uint8_t charid = index >> 1;
+                switch (charid) {
+                    /* This is a special char */
+                    case ('Z' - 'A') + 3:
+                    case ('Z' - 'A') + 4:
+                        kbd_line_buf[i] = charid - ('Z' - 'A') - 2;
+                        break;
+
+                    /* This is a letter */
+                    default:
+                        kbd_line_buf[i] = 'A' + charid;
+                        break;
+                }
             }
             /* Set cursor to draw line */
             display->setCursor(0, 1 + j);
@@ -50,16 +71,12 @@ void ui::screen::SpellScreen::render(void* state, SerialLCD* display) {
 
 void ui::screen::SpellScreen::update(void* state, bool* dirty) {
     /* Get self */
-    auto self = (SpellScreen*)state;
+    // auto self = (SpellScreen*)state;
 
     *dirty = true;
 }
 
 void ui::screen::SpellScreen::input(void* state, const io::inputstate_t& inputs, io::outputstate_t& outputs) {
-    /* Check if screen */
-    if (ui::Display::current() != SpellScreen::getID()) {
-        return;
-    }
 
     /* Get self */
     auto self = (SpellScreen*)state;
