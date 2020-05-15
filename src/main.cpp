@@ -20,16 +20,14 @@ int main() {
   
   /* Initialize controller */
   io::Controller::run();
-
   /* Initialize engine */
   synth::Engine::run();
-  //synth::Engine::workbenchIterator().next();
 
   /* Initialize display */
-  ui::Display::add(bootScreen.getID(), bootScreen.get());
-  ui::Display::add(keymapScreen.getID(), keymapScreen.get());
-  ui::Display::add(spellScreen.getID(), spellScreen.get());
-  ui::Display::go(bootScreen.getID());
+  ui::Display::add(bootScreen);
+  ui::Display::add(keymapScreen);
+  ui::Display::add(spellScreen);
+  ui::Display::go(bootScreen);
   ui::Display::run();
 
   /* End initialization */

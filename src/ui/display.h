@@ -63,10 +63,18 @@ namespace ui {
 
             /* Add a new screen */
             static bool add(uint8_t id, const screen_t& screen);
+            /* Add a new screen */
+            template <typename T> __STATIC_FORCEINLINE bool add(T& screen) {
+                return Display::add(screen.getID(), screen.get());
+            }
             /* Get the screen */
             static bool get(uint8_t id, screen_t& screen);
             /* Go to screen */
             static bool go(uint8_t id);
+            /* Go to screen */
+            template <typename T> __STATIC_FORCEINLINE bool go(T& screen) {
+                return Display::go(screen.getID());
+            }
             /* The current screen id */
             static int8_t current();
             /* Wait until screen repaint is over (WORKS ONLY IN EVENT THREAD !) */
