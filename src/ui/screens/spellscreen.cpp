@@ -63,9 +63,18 @@ void ui::screen::SpellScreen::input(void* state, const io::inputstate_t& inputs,
 
     /* Get self */
     auto self = (SpellScreen*)state;
-    /* Check keys */
-    if (inputs.buttons.next) { self->m_cursor.x = utils::mod((int8_t)self->m_cursor.x + 1, 10); }
-    if (inputs.buttons.prev) { self->m_cursor.x = utils::mod((int8_t)self->m_cursor.x - 1, 10); }
-    if (inputs.buttons.load) { self->m_cursor.y = utils::mod((int8_t)self->m_cursor.y + 1, 3); }
-    if (inputs.buttons.save) { self->m_cursor.y = utils::mod((int8_t)self->m_cursor.y - 1, 3); }
+
+    /* Check if alt was pressed */
+    if (!inputs.alt) {
+        /* Alt not pressed */
+        /* Directional keys */
+        if (inputs.buttons.next) { self->m_cursor.x = utils::mod((int8_t)self->m_cursor.x + 1, 10); }
+        if (inputs.buttons.prev) { self->m_cursor.x = utils::mod((int8_t)self->m_cursor.x - 1, 10); }
+        if (inputs.buttons.load) { self->m_cursor.y = utils::mod((int8_t)self->m_cursor.y + 1, 3); }
+        if (inputs.buttons.save) { self->m_cursor.y = utils::mod((int8_t)self->m_cursor.y - 1, 3); }
+        /* Enter key */
+    } else {
+        /* Alt is pressed */
+        if (inputs.buttons.load) { Display::go<KeymapScreen>(); }
+    }
 }

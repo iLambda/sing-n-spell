@@ -26,7 +26,7 @@ void ui::screen::BootScreen::update(void* state, bool* dirty) {
         /* Reset time */
         self->m_frame = 0;
         /* Go to keymap screen */
-        Display::go(KeymapScreen::getID());
+        Display::go<KeymapScreen>();
     }
     
     /* Increase time */

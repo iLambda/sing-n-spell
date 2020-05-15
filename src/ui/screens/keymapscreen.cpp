@@ -33,8 +33,10 @@ char str_buf_note[5] = {0};
 char str_buf_itoa[4] = {0};
 
 ui::screen::KeymapScreen::KeymapScreen() : 
-    m_workbench(utils::preserved_constant(synth::worditerator_t::null())) 
-{ }
+    m_workbench(utils::preserved_constant(synth::worditerator_t::null())) { 
+
+}
+
 
 void ui::screen::KeymapScreen::reset(void* state) {
     /* Get self */
@@ -242,36 +244,27 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
 }
 
 void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs, io::outputstate_t& outputs) {
-    /* Static data */
-    static io::outputstate_t output;
     /* Get self */
     auto self = (KeymapScreen*)state;
-
-    /* If this is not the current screen, return */
-    if (Display::current() != KeymapScreen::getID()) {
-        return;
-    }
 
     /**** OUTPUT ****/
     /* Check if alt has been pressed */
     if (!inputs.alt) {
         /* Alt is not pressed */
-        output.cmdphon = self->m_datamode.current == DATAMODE_CMD;
-        output.individual = synth::Engine::key().mode == synth::KEY_MODE_LOCAL;
+        outputs.cmdphon = self->m_datamode.current == DATAMODE_CMD;
+        outputs.individual = synth::Engine::key().mode == synth::KEY_MODE_LOCAL;
     } else {
         /* Alt is pressed */
         /* Reset ; TODO !!! */
-        output.value = 0x00;
+        outputs.value = 0x00;
     }
-    /* Send output */
-    io::Controller::set(output);
 
     /**** INPUT ****/
     /* Load button */
     if (inputs.buttons.load) {
         /* Go to spell screen */
         if (inputs.alt) {
-            ui::Display::go(SpellScreen::getID());
+            ui::Display::go<SpellScreen>();
         }
     }
 
