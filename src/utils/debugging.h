@@ -11,7 +11,13 @@ namespace dbg {
 
     void printf(const char* format, ...);
 
-    __attribute__((always_inline)) inline void setLEDs(uint8_t state) {
+    MBED_FORCEINLINE void put(const char* text) {
+        #ifdef BUILD_CONFIG_DEBUG
+            dbg::serial->puts(text);
+        #endif
+    }
+
+    MBED_FORCEINLINE void setLEDs(uint8_t state) {
         /* Set */
         #ifdef BUILD_CONFIG_DEBUG
             dbg::leds->write(state);
