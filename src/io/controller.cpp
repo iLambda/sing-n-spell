@@ -21,16 +21,6 @@ void io::Controller::run() {
     Controller::m_threadInput.set_priority(IO_CONTROLLER_THREAD_PRIORITY_INPUT);
 }
 
-io::inputstate_t io::Controller::get() {
-    /* Return the state */
-    return Controller::m_inState;
-}
-
-void io::Controller::set(const io::outputstate_t& state) {
-    /* Set the state */
-    Controller::m_outState = state;
-}
-
 void io::Controller::isrMidi(RawSerial* self) {
     /*
      *  CAREFUL !!! This is ISR context
@@ -43,43 +33,38 @@ void io::Controller::isrMidi(RawSerial* self) {
 }
 
 void io::Controller::updateButtons() {
-    /* Peripherals to read */
-    static DigitalIn prev(PINMAP_KBD_PREV, PinMode::PullUp);
-    static DigitalIn next(PINMAP_KBD_NEXT, PinMode::PullUp);
-    static DigitalIn cmdPhon(PINMAP_KBD_CMDPHON, PinMode::PullUp);
-    static DigitalIn individual(PINMAP_KBD_INDIVIDUAL, PinMode::PullUp);
-    static DigitalIn alt(PINMAP_KBD_ALT, PinMode::PullUp);
-    static DigitalIn prelisten(PINMAP_KBD_PRELISTEN, PinMode::PullUp);
-    static DigitalIn load(PINMAP_KBD_LOAD, PinMode::PullUp);
-    static DigitalIn save(PINMAP_KBD_SAVE, PinMode::PullUp);
-    /* Peripherals to write */
-    static BusOut busOut(CTRL_BUS_OUT(PINMAP_KBD_INDIVIDUAL_OUT, PINMAP_KBD_CMDPHON_OUT));
+    /* Peripherals */
+    static BusIn busInBtn(
+        CTRL_IN_BUS_BTN(
+            PINMAP_KBD_PRELISTEN, 
+            PINMAP_KBD_SAVE, PINMAP_KBD_LOAD,
+            PINMAP_KBD_NEXT, PINMAP_KBD_PREV,
+            PINMAP_KBD_MENU_CLICK, PINMAP_KBD_INDIVIDUAL, 
+            PINMAP_KBD_CMDPHON));
+    static BusOut busOut(CTRL_OUT_BUS(PINMAP_KBD_INDIVIDUAL_OUT, PINMAP_KBD_CMDPHON_OUT));
+    static auto btnAlt = DigitalIn(PINMAP_KBD_ALT, PinMode::PullUp);    
+    /* Set as pullup */
+    busInBtn.mode(PinMode::PullUp);
 
-
+    /** OUTPUTS **/
     /* Write output data */
     busOut.write(Controller::m_outState.value);
     
+    /** INPUTS **/
+    /* Save old state */
+    Controller::m_buttonsAbsoluteOld = Controller::m_buttonsAbsolute;
     /* 
         This routine must be 'atomic'.    
         Lock as critical the following code.
         !!! MUST BE SHORT    
     */
     CriticalSectionLock lock;
-    
-    /* Save for old state */
-    Controller::m_buttonsAbsoluteOld = Controller::m_buttonsAbsolute;
-
-    /* Read buttons (!INVERTED) */
-    Controller::m_buttonsAbsolute.prev = !prev.read();
-    Controller::m_buttonsAbsolute.next = !next.read();
-    Controller::m_buttonsAbsolute.cmdphon = !cmdPhon.read();
-    Controller::m_buttonsAbsolute.individual = !individual.read();
-    Controller::m_buttonsAbsolute.prelisten = !prelisten.read();
-    Controller::m_buttonsAbsolute.load = !load.read();
-    Controller::m_buttonsAbsolute.save = !save.read();
+    /* Read buttons */
+    Controller::m_buttonsAbsolute.value = busInBtn.read();
+    /* Read encoders */
     /* Read modkeys & stateful toggles */
-    Controller::m_inState.alt = !alt.read();
-    
+    Controller::m_inState.alt = !btnAlt.read();
+    // Controller::m_inState.edit = !btnEdit.read();
     /* Write 'pressed' state for buttons */
     Controller::m_inState.buttons.value = 
             Controller::m_buttonsAbsolute.value

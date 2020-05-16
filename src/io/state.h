@@ -20,6 +20,8 @@ namespace io {
             uint8_t next : 1;
             /* The prev key */
             uint8_t prev : 1;
+            /* The selector btn */
+            uint8_t selector : 1;
             
             /* The individual mode selector */
             uint8_t individual : 1; 
@@ -28,10 +30,12 @@ namespace io {
         };
     };
 
+    #define CTRL_IN_BUS_BTN(prelisten, save, load, next, prev, selector, indiv, cmdphon) \
+        (prelisten), (save), (load), (next), (prev), (selector), (indiv), (cmdphon)
+    
+
     /* The encoders */
     union inputstate_encoders_t {
-        /* The value as a bitstring */
-        uint32_t value;
         /* The value as a structured datatype */
         MBED_PACKED(struct) {
             /* The pitch encoder */
@@ -43,7 +47,13 @@ namespace io {
             /* The selector */
             int8_t selector;
         };
+        /* The value as a bitstring */
+        uint32_t value;
     };
+
+    #define CTRL_IN_BUS_ENC(pitch_pos, pitch_neg, file_pos, file_neg, data_pos, data_neg, selector_pos, selector_neg) \
+        (pitch_pos), (pitch_neg), (file_pos), (file_neg), (data_pos), (data_neg), (selector_pos), (selector_neg)
+    
     
 
     /* The input state */    
@@ -58,19 +68,6 @@ namespace io {
         uint8_t edit : 1;
     };
 
-    /* Accumulate an input state */
-    inline void accumulate(inputstate_t& accumulator, const inputstate_t& delta) {
-        /* Accumulate alt */
-        accumulator.alt |= delta.alt;
-        /* Accumulate buttons */
-        accumulator.buttons.value |= delta.buttons.value;
-        /* Accumulate encoders */        
-        accumulator.encoders.value = 
-            __QADD8(accumulator.encoders.value, delta.encoders.value);
-        /* Edit is not accumulated */
-        accumulator.edit = delta.edit;
-    }
-
     /* The output state */
     union outputstate_t {
         struct {
@@ -82,8 +79,8 @@ namespace io {
         /* The value */
         uint8_t value;
     };
-
-    #define CTRL_BUS_OUT(indiv, cmdphon) (indiv),(cmdphon)
+    
+    #define CTRL_OUT_BUS(individual, cmdphon) (individual), (cmdphon)
 }
 
 #endif

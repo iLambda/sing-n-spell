@@ -59,9 +59,7 @@ namespace io {
             /* Run the controller  */
             static void run();
             /* Get the state */
-            static inputstate_t get();
-            /* Sets the state */
-            static void set(const outputstate_t& state);
+            __STATIC_FORCEINLINE inputstate_t input() { return Controller::m_inState; }
             /* Return the output state */
             __STATIC_FORCEINLINE outputstate_t& output() { return Controller::m_outState; }
             
