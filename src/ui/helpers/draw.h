@@ -15,6 +15,13 @@ namespace ui {
         display->write(text);
     }
 
+    /* Draw text centered */
+    template <uint8_t N>
+    MBED_FORCEINLINE void screen_write_centered(SerialLCD* const& display, const char* const& text, uint8_t height) {
+        display->setCursor((Display::screenWidth() - (strlen(text)))/2, height);
+        display->write(text);
+    }
+
 };
 
 #endif
