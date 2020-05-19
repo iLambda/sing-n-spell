@@ -16,7 +16,11 @@ ui::screen::SpellScreen spellScreen;
 int main() {
 
   /* Start initialization */
-  dbg::setLEDs(0x01);
+  #ifndef BUILD_CONFIG_DEBUG
+    dbg::setLEDs(0x01);
+  #else
+    dbg::setLEDs(0x00);
+  #endif
   
   /* Initialize controller */
   io::Controller::run();
@@ -31,7 +35,9 @@ int main() {
   ui::Display::run();
 
   /* End initialization */
-  dbg::setLEDs(0x03);
+  #ifndef BUILD_CONFIG_DEBUG
+    dbg::setLEDs(0x03);
+  #endif
 
   while(1) {
   }
