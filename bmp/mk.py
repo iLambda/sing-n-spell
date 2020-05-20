@@ -70,3 +70,6 @@ def mk():
 
 # Do !
 mk()
+
+# OK
+print("Regenerated bmp file !")
