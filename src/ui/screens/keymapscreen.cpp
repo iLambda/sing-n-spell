@@ -354,9 +354,9 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             else { synth::Engine::workbenchIterator().previous(); }
         } else {
             /* Go next */
-            if (inputs.buttons.next) { synth::Engine::workbenchIterator().first(); }
+            if (inputs.buttons.next) { synth::Engine::workbenchIterator().end(); }
             /* Go previous */
-            else { synth::Engine::workbenchIterator().end(); }
+            else { synth::Engine::workbenchIterator().first(); }
         }
     }
 
