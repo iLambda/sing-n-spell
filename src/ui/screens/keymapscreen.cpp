@@ -1,6 +1,8 @@
+#include "bitmaps.h"
 #include "io/controller.h"
 #include "io/midi.h"
 #include "synth/engine.h"
+#include "synth/tts/code.h"
 #include "ui/display.h"
 #include "ui/screens/spellscreen.h"
 #include "utils/string.h"
@@ -31,6 +33,7 @@ char str_data_pos[] = "--/--";
 char str_data_name[ui::Display::screenWidth() - utils::size(str_data_pos) + 1] = {0};
 char str_buf_note[5] = {0};
 char str_buf_itoa[4] = {0};
+char str_invalid[] = "Invalid (  )";
 
 ui::screen::KeymapScreen::KeymapScreen() : 
     m_workbench(utils::preserved_constant(synth::worditerator_t::null())) { 
@@ -51,6 +54,8 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
     self->m_workbenchValueChanged = false;
+    /* Add custom characters */
+    ui::Display::driver()->createChar(7, bmp::lcd::BMP_LCD_DELTA);
 }
 
 /*******************************************
@@ -98,13 +103,16 @@ MBED_FORCEINLINE void drawParamValue(SerialLCD* const& display, ui::screen::Keym
 MBED_FORCEINLINE uint8_t drawPhon(uint8_t* const& screenbuf, const int& x, const uint8_t& phon) {
     /* Check */
     if (x < 0) return 0;
-    /* Convert */
-    utils::uint8_hex_to_str(str_buf_itoa, phon);
-    /* Copy */
-    screenbuf[x] = str_buf_itoa[1];
-    if (x > 0) { screenbuf[x - 1] = str_buf_itoa[0]; return 2; }
-    /* Len */
-    return 1;
+    /* Get string for given code */
+    auto codename = synth::tts_code_instruction(phon);
+    int len = strlen(codename);
+    /* While there's space */
+    int i = 0;
+    for (i = 0; i < min(len, x+1); i++) {
+        /* Write the current char */
+        screenbuf[x - i] = codename[len - i - 1];
+    }
+    return ((uint8_t)i);
 }
 
 /* Draw the current data */
@@ -112,8 +120,19 @@ MBED_FORCEINLINE void drawData(SerialLCD* const& display, const synth::worditera
     /* Write frame to buffer */
     utils::uint8_hex_to_str(&str_data_pos[0], it.position());
     utils::uint8_hex_to_str(&str_data_pos[3], it.length());
-    /* Write name of command to buffer (don't forget to null terminate it) */
-    utils::ncopy_then_pad(str_data_name, "<UNNAMED>", ' ',  utils::size(str_data_name)-1);
+    /* Get name for current value */
+    auto name = synth::tts_code_name(it.get());
+    /* Check if valid */
+    if (name != nullptr) {
+        /* Write name of command to buffer */
+        utils::ncopy_then_pad(str_data_name, name, ' ',  utils::size(str_data_name)-1);    
+    } else {
+        /* Write code in invalid buffer */
+        utils::uint8_hex_to_str(&str_invalid[9], it.get());
+        /* Write name of command to buffer */
+        utils::ncopy_then_pad(str_data_name, str_invalid, ' ',  utils::size(str_data_name)-1); 
+    }
+    
     /* Print it */
     display->setCursor(0, 2);
     display->write(str_data_name);
