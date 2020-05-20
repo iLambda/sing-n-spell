@@ -6,6 +6,7 @@
 
 #include "io/state.h"
 #include "synth/keymap.h"
+#include "synth/tts/code.h"
 #include "ui/screen.h"
 #include "utils/data/preserved.h"
 
@@ -38,7 +39,7 @@ namespace ui {
                 /* The key mode mode */
                 utils::preserved_t<synth::keymode_t> m_keymode;
                 /* The cmd/phon mode */
-                utils::preserved_t<DataMode> m_datamode;
+                utils::preserved_t<synth::tts_code_type_t> m_datamode;
                 /* Did the iterator change ? */
                 utils::preserved_t<synth::worditerator_t> m_workbench;
                 /* Did some iterator value change ? */

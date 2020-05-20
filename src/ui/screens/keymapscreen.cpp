@@ -24,6 +24,7 @@ const char* const cstr_param[][2] = {
 const char* const cstr_datamode_brk[] = {
     "<>", "[]"
 };
+const char* cstr_invalid_instruction = "??";
 /* Buffers */
 uint8_t frm_line[ui::Display::screenWidth() + 1] = {0};
 uint8_t frm_cmd[ui::Display::screenWidth() + 1] = {0};
@@ -49,13 +50,26 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_parameter = utils::preserved_constant(PARAM_PITCH);
     self->m_paramTarget = utils::preserved_constant(&synth::Engine::key().pitch);
     self->m_paramValue = utils::preserved_constant(synth::Engine::key().pitch);
-    self->m_datamode = utils::preserved_constant(DATAMODE_PHN);
+    self->m_datamode = utils::preserved_constant(synth::TTS_TYPE_PHONEME);
     self->m_note = utils::preserved_constant(synth::Engine::note());
     self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
     self->m_workbenchValueChanged = false;
     /* Add custom characters */
     ui::Display::driver()->createChar(7, bmp::lcd::BMP_LCD_DELTA);
+}
+
+/*******************************************
+ * Helpers
+ *******************************************/
+
+MBED_FORCEINLINE ui::screen::KeymapScreen::DataMode map_datamode(const synth::tts_code_type_t& ty) {
+    switch (ty) {
+        case synth::TTS_TYPE_COMMAND: return ui::screen::KeymapScreen::DATAMODE_CMD;
+        case synth::TTS_TYPE_PHONEME: return ui::screen::KeymapScreen::DATAMODE_PHN;
+        case synth::TTS_TYPE_INVALID: return ui::screen::KeymapScreen::DATAMODE_PHN;
+    }
+    MBED_ASSERT(false);
 }
 
 /*******************************************
@@ -105,6 +119,8 @@ MBED_FORCEINLINE uint8_t drawPhon(uint8_t* const& screenbuf, const int& x, const
     if (x < 0) return 0;
     /* Get string for given code */
     auto codename = synth::tts_code_instruction(phon);
+    if (codename == nullptr) { codename = cstr_invalid_instruction; }
+    /* Compute its length */
     int len = strlen(codename);
     /* While there's space */
     int i = 0;
@@ -112,6 +128,7 @@ MBED_FORCEINLINE uint8_t drawPhon(uint8_t* const& screenbuf, const int& x, const
         /* Write the current char */
         screenbuf[x - i] = codename[len - i - 1];
     }
+    /* Return progess */
     return ((uint8_t)i);
 }
 
@@ -189,7 +206,7 @@ void ui::screen::KeymapScreen::render(void* state, SerialLCD* display) {
     IF_DIRTY(self->m_isDirty.paramValue, drawParamValue(display, self->m_parameter.current, self->m_paramTarget.current));
     /* Draw the frame */
     bool smthFrameDirty = !!self->m_isDirty.frame || !!self->m_isDirty.frameDatamode;
-    IF_DIRTY(smthFrameDirty, drawFrame(display, !!self->m_isDirty.frame, self->m_datamode.current, synth::Engine::workbenchIterator()));
+    IF_DIRTY(smthFrameDirty, drawFrame(display, !!self->m_isDirty.frame, map_datamode(self->m_datamode.current), synth::Engine::workbenchIterator()));
     IF_DIRTY(self->m_isDirty.frameData, drawData(display, synth::Engine::workbenchIterator()));
 
     /* Clean dirty inputs */
@@ -230,6 +247,12 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         self->m_isDirty.frameData = 1;
         self->m_isDirty.frameDatamode = 1;
     }
+    /* If datamode changed, dirty it */
+    if (utils::preserved_changes_with(self->m_datamode, synth::tts_code_type(self->m_workbench.current.get()))) {
+        /* Dirty datamode */
+        self->m_isDirty.frameDatamode = 1;
+    }
+    
     /* If param target changed */
     if (utils::preserved_has_changed(self->m_paramTarget)) {
         /* Dirty */
@@ -253,13 +276,6 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         /* Iterate */
         utils::preserved_iterate(self->m_parameter);
     }
-    /* If datamode changed, dirty it */
-    if (utils::preserved_has_changed(self->m_datamode)) {
-        /* Dirty datamode */
-        self->m_isDirty.frameDatamode = 1;
-        /* Iterate */
-        utils::preserved_iterate(self->m_datamode);
-    }
 
     /* Check if need to flag dirty */
     *dirty = self->m_isDirty.value != 0;
@@ -273,7 +289,7 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
     /* Check if alt has been pressed */
     if (!inputs.alt) {
         /* Alt is not pressed */
-        outputs.cmdphon = self->m_datamode.current == DATAMODE_CMD;
+        outputs.cmdphon = map_datamode(self->m_datamode.current) == DATAMODE_CMD;
         outputs.individual = synth::Engine::key().mode == synth::KEY_MODE_LOCAL;
     } else {
         /* Alt is pressed */
@@ -316,10 +332,15 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
     if (inputs.buttons.cmdphon) {
         /* Check alt */
         if (!inputs.alt) {
-            /* Compute toggled mode */
-            auto mode = self->m_datamode.current == DATAMODE_PHN ? DATAMODE_CMD : DATAMODE_PHN;
-            /* And change it */
-            utils::preserved_update(self->m_datamode, mode);
+            /* Transform current value */
+            synth::tts_code_transform(synth::Engine::workbenchIterator().at());
+            /* Say it's been modified */
+            self->m_workbenchValueChanged = true;
+
+            // /* Compute toggled mode */
+            // auto mode = self->m_datamode.current == DATAMODE_PHN ? DATAMODE_CMD : DATAMODE_PHN;
+            // /* And change it */
+            // utils::preserved_update(self->m_datamode, mode);
         }
     }
 
@@ -365,7 +386,8 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
         if (!inputs.alt) {
             /* Alt not pressed */ 
             /* Modify frame (TODO : do)*/
-            synth::Engine::workbenchIterator().at() += inputs.encoders.data;
+            synth::tts_code_delta(synth::Engine::workbenchIterator().at(), inputs.encoders.data);
+            // synth::Engine::workbenchIterator().at() += inputs.encoders.data;
             /* Say it's been modified */
             self->m_workbenchValueChanged = true;
         }
