@@ -6,21 +6,21 @@
 
 namespace dbg {
     
-    extern mbed::RawSerial* serial;
-    extern mbed::BusOut* leds;
+    extern mbed::RawSerial serial;
+    extern mbed::BusOut leds;
 
     void printf(const char* format, ...);
 
     MBED_FORCEINLINE void put(const char* text) {
         #ifdef BUILD_CONFIG_DEBUG
-            dbg::serial->puts(text);
+            dbg::serial.puts(text);
         #endif
     }
 
     MBED_FORCEINLINE void setLEDs(uint8_t state) {
         /* Set */
         #ifdef BUILD_CONFIG_DEBUG
-            dbg::leds->write(state);
+            dbg::leds.write(state);
         #endif
     }
     
