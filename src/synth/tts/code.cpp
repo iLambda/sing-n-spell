@@ -256,8 +256,8 @@ synth::tts_code_type_t synth::tts_code_transform(uint8_t& code) {
         /* If command */
         case TTS_TYPE_COMMAND:
             /* Just clamp to 0x7F range and set 0x80 bit */
-            code = (code & 0x7F) | 0x80;
-            // code = TTS_PHON_END;
+            // code = (code & 0x7F) | 0x80;
+            code = TTS_PHON_END;
             return TTS_TYPE_PHONEME;
 
         /* If data */
