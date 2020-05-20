@@ -41,8 +41,6 @@ const char* const tts_phoneme_instruction[] = {
     "D8", "D9", "D10", "D11", "M0", 
     "M1", "M2", "--"
  };
-/* The table of legible names for an invalid value */
-const char* const tts_invalid_instruction = "??";
 
 /* The table of legible names for a command */
 const char* const tts_cmd_name[] = {
@@ -244,8 +242,35 @@ void synth::tts_code_next(uint8_t& code) {
         default: {
             code = TTS_PHON_END;
             break;
+    /* Go to ith value in given range, for a given code */
+    void tts_code_delta(uint8_t& code, int8_t delta);
         }
         
+    }
+}
+
+/* Transform a code into its other type */
+synth::tts_code_type_t synth::tts_code_transform(uint8_t& code) {
+    /* Depending on its type, */
+    switch (tts_code_type(code)) {
+        /* If command */
+        case TTS_TYPE_COMMAND:
+            /* Just clamp to 0x7F range and set 0x80 bit */
+            code = (code & 0x7F) | 0x80;
+            // code = TTS_PHON_END;
+            return TTS_TYPE_PHONEME;
+
+        /* If data */
+        case TTS_TYPE_PHONEME:
+            /* Just modulo it to number of cmds and add first */
+            code = ((code & 0x7F) % (TTS_CMD_LAST - TTS_CMD_FIRST + 1)) + TTS_CMD_FIRST; 
+            return TTS_TYPE_COMMAND;
+
+        /* If invalid */
+        default:
+            /* Set to end */
+            code = TTS_PHON_END;
+            return TTS_TYPE_PHONEME;
     }
 }
 
@@ -281,6 +306,31 @@ void synth::tts_code_prev(uint8_t& code) {
     }
 }
 
+
+/* Go to ith value in given range, for a given code */
+void synth::tts_code_delta(uint8_t& code, int8_t delta) {
+    /* Depending on its type, */
+    switch (tts_code_type(code)) {
+        /* If command */
+        case TTS_TYPE_COMMAND: {
+            code += (uint8_t)delta;
+            code = (code % (TTS_CMD_LAST - TTS_CMD_FIRST + 1)) + TTS_CMD_FIRST;
+            break;
+        }
+
+        /* If phoneme */
+        case TTS_TYPE_PHONEME: {
+            /* Increment and rollover */
+            code += (uint8_t)delta;
+            code = 0x80 | ((code) & 0x7F);
+            break;
+        }
+
+        /* If invalid, don't touch anything */
+        default: { break; }
+    }
+}
+
 /* Return the name of a code */
 const char* synth::tts_code_instruction(const uint8_t& code) {
     /* Depending on its type, */
@@ -295,7 +345,7 @@ const char* synth::tts_code_instruction(const uint8_t& code) {
 
         /* If invalid, bring back to phoneme type, and set to an end character */
         default:
-            return tts_invalid_instruction;            
+            return nullptr;            
     }
 }
 

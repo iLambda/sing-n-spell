@@ -176,6 +176,10 @@ namespace synth {
     void tts_code_next(uint8_t& code);
     /* Go to prev value in given range, for a given code */
     void tts_code_prev(uint8_t& code);
+    /* Go to ith value in given range, for a given code */
+    void tts_code_delta(uint8_t& code, int8_t delta);
+    /* Transform a code into its other type, and return the new code type */
+    tts_code_type_t tts_code_transform(uint8_t& code);
     /* Return the instruction for a code */
     const char* tts_code_instruction(const uint8_t& code);
     /* Return the name of a code */
