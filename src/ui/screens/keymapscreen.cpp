@@ -286,15 +286,15 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
     auto self = (KeymapScreen*)state;
 
     /**** OUTPUT ****/
+    /* Display cmd/phon mode */
+    outputs.cmdphon = map_datamode(self->m_datamode.current) == DATAMODE_CMD;
     /* Check if alt has been pressed */
     if (!inputs.alt) {
         /* Alt is not pressed */
-        outputs.cmdphon = map_datamode(self->m_datamode.current) == DATAMODE_CMD;
         outputs.individual = synth::Engine::key().mode == synth::KEY_MODE_LOCAL;
     } else {
         /* Alt is pressed */
-        /* Reset ; TODO !!! */
-        outputs.value = 0x00;
+        outputs.individual = 0;
     }
 
     /**** INPUT ****/
