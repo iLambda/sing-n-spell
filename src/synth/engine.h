@@ -61,7 +61,7 @@ namespace synth {
                 return wordOf(Engine::m_key);
             }
             /* Returns an iterator over the current word */
-            __STATIC_FORCEINLINE const worditerator_t& workbenchIterator() {
+            __STATIC_FORCEINLINE worditerator_t& workbenchIterator() {
                 /* Returns the word iterator */
                 return *Engine::m_workbenchIterator;
             }
