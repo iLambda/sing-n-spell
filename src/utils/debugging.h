@@ -21,6 +21,8 @@ namespace dbg {
         /* Set */
         #ifdef BUILD_CONFIG_DEBUG
             dbg::leds.write(state);
+        #else 
+            dbg::leds.write(0x00);
         #endif
     }
     
