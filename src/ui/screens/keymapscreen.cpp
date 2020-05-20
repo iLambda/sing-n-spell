@@ -50,6 +50,7 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_note = utils::preserved_constant(synth::Engine::note());
     self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
+    self->m_workbenchValueChanged = false;
 }
 
 /*******************************************
@@ -202,7 +203,9 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         self->m_isDirty.paramName = 1;
     }
     /* If iterator changed */
-    if (utils::preserved_changes_with(self->m_workbench, synth::Engine::workbenchIterator())) {
+    if (utils::preserved_changes_with(self->m_workbench, synth::Engine::workbenchIterator()) || self->m_workbenchValueChanged) {
+        /* Clean */
+        self->m_workbenchValueChanged = false;
         /* Dirty */
         self->m_isDirty.frame = 1;
         self->m_isDirty.frameData = 1;
@@ -260,6 +263,13 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
     }
 
     /**** INPUT ****/
+
+    /** Gutter part **/
+
+    /** Global part **/
+    
+
+    /** File part **/
     /* Load button */
     if (inputs.buttons.load) {
         /* Go to spell screen */
@@ -268,7 +278,7 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
         }
     }
 
-
+    /** Sound part **/
     /* Individual switch */
     if (inputs.buttons.individual) {
         /* Check alt */
@@ -327,6 +337,18 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
         /* Add to parameter */
         if (self->m_paramTarget.current) {
             *self->m_paramTarget.current += inputs.encoders.pitch;
+        }
+    }
+
+    /* Data encoder */
+    if (inputs.encoders.data) {
+        /* Check if alt pressed */
+        if (!inputs.alt) {
+            /* Alt not pressed */ 
+            /* Modify frame (TODO : do)*/
+            synth::Engine::workbenchIterator().at() += inputs.encoders.data;
+            /* Say it's been modified */
+            self->m_workbenchValueChanged = true;
         }
     }
 }

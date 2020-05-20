@@ -41,6 +41,8 @@ namespace ui {
                 utils::preserved_t<DataMode> m_datamode;
                 /* Did the iterator change ? */
                 utils::preserved_t<synth::worditerator_t> m_workbench;
+                /* Did some iterator value change ? */
+                bool m_workbenchValueChanged;
                 /* The current parameter */
                 utils::preserved_t<uint8_t*> m_paramTarget;
                 /* The current parameter value */
