@@ -1,5 +1,6 @@
 #include "ui/display.h"
 #include "ui/helpers/draw.h"
+#include "version.h"
 
 #include "keymapscreen.h"
 #include "bootscreen.h"
@@ -14,7 +15,7 @@ void ui::screen::BootScreen::reset(void* state) {
 void ui::screen::BootScreen::render(void* state, SerialLCD* display) {
     /* Write */
     screen_write_centered(display, "Sing'n'Spell", 1);
-    screen_write_centered(display, BUILD_VERSION_CONFIG, 2);
+    screen_write_centered(display, BUILD_VERSION_NBUILD, 2);
 }
 
 void ui::screen::BootScreen::update(void* state, bool* dirty) {
