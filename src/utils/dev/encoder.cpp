@@ -9,7 +9,7 @@
 
 #define DIR_NONE 0x0
 #define DIR_CW 0xFF0
-#define DIR_CCW 0x0101
+#define DIR_CCW 0x010
 
 const uint16_t ttable[6][4] = {
   // R_START (00)
