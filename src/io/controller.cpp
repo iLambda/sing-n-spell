@@ -1,6 +1,7 @@
 #include "controller.h"
 #include "midi.h"
 #include "pin.h"
+#include "utils/dev/encoder.h"
 
 
 Thread io::Controller::m_threadInput;
@@ -33,7 +34,10 @@ void io::Controller::isrMidi(RawSerial* self) {
 }
 
 void io::Controller::updateButtons() {
+    /* Temp data */
+    static uint8_t inTmp;
     /* Peripherals */
+    static BusOut busOut(CTRL_OUT_BUS(PINMAP_KBD_INDIVIDUAL_OUT, PINMAP_KBD_CMDPHON_OUT));
     static BusIn busInBtn(
         CTRL_IN_BUS_BTN(
             PINMAP_KBD_PRELISTEN, 
@@ -41,18 +45,23 @@ void io::Controller::updateButtons() {
             PINMAP_KBD_NEXT, PINMAP_KBD_PREV,
             PINMAP_KBD_MENU_CLICK, PINMAP_KBD_INDIVIDUAL, 
             PINMAP_KBD_CMDPHON));
-    static BusOut busOut(CTRL_OUT_BUS(PINMAP_KBD_INDIVIDUAL_OUT, PINMAP_KBD_CMDPHON_OUT));
-    static auto btnAlt = DigitalIn(PINMAP_KBD_ALT, PinMode::PullUp);    
+    static DigitalIn btnAlt(PINMAP_KBD_ALT, PinMode::PullUp);    
+    static DigitalIn btnEdit(PINMAP_KBD_EDIT, PinMode::PullUp);
+    static dev::Encoder fileEncoder(PINMAP_KBD_FILE);
+    static dev::Encoder dataEncoder(PINMAP_KBD_DATA);
+    static dev::Encoder pitchEncoder(PINMAP_KBD_PITCH);
+    static dev::Encoder menuEncoder(PINMAP_KBD_MENU);
+
     /* Set as pullup */
     busInBtn.mode(PinMode::PullUp);
-
-    /** OUTPUTS **/
-    /* Write output data */
-    busOut.write(Controller::m_outState.value);
-    
-    /** INPUTS **/
     /* Save old state */
     Controller::m_buttonsAbsoluteOld = Controller::m_buttonsAbsolute;
+
+    /* Write output data */
+    busOut.write(Controller::m_outState.value);
+
+    /* Read bus, and save in variable (reading locks mutexes) */
+    inTmp = busInBtn.read();
     /* 
         This routine must be 'atomic'.    
         Lock as critical the following code.
@@ -60,11 +69,15 @@ void io::Controller::updateButtons() {
     */
     CriticalSectionLock lock;
     /* Read buttons */
-    Controller::m_buttonsAbsolute.value = busInBtn.read();
+    Controller::m_buttonsAbsolute.value = (~inTmp) & busInBtn.mask();
     /* Read encoders */
+    Controller::m_inState.encoders.file = fileEncoder.read();
+    Controller::m_inState.encoders.data = dataEncoder.read();
+    Controller::m_inState.encoders.pitch = pitchEncoder.read();
+    Controller::m_inState.encoders.selector = menuEncoder.read();
     /* Read modkeys & stateful toggles */
     Controller::m_inState.alt = !btnAlt.read();
-    // Controller::m_inState.edit = !btnEdit.read();
+    Controller::m_inState.edit = !btnEdit.read();
     /* Write 'pressed' state for buttons */
     Controller::m_inState.buttons.value = 
             Controller::m_buttonsAbsolute.value

@@ -5,33 +5,34 @@
 #include <rtos.h>
 
 /** Screen **/
-#define PINMAP_I2C_SDA     PB_11
-#define PINMAP_I2C_SCL     PB_10
+#define PINMAP_I2C_SDA                  PB_9
+#define PINMAP_I2C_SCL                  PB_8
 
 /** Keyboard **/
-/* Frame */
-#define PINMAP_KBD_PREV                 PE_15
-#define PINMAP_KBD_NEXT                 PE_14
-#define PINMAP_KBD_CMDPHON              PE_10
-#define PINMAP_KBD_CMDPHON_OUT          PE_8
-#define PINMAP_KBD_CODE                 NC, NC
-/* Note */
-#define PINMAP_KBD_PRELISTEN            PG_14
-#define PINMAP_KBD_INDIVIDUAL           PE_12
-#define PINMAP_KBD_INDIVIDUAL_OUT       PG_9
-#define PINMAP_KBD_PITCH                NC, NC
-/* Settings */
-#define PINMAP_KBD_ALT                  PE_7
-#define PINMAP_KBD_EDIT                 NC
-/* File */
-#define PINMAP_KBD_LOAD                 PF_15
-#define PINMAP_KBD_SAVE                 PE_13
-#define PINMAP_KBD_FILE                 PE_13
-/* Menu */
-#define PINMAP_KBD_MENU                 NC, NC
-#define PINMAP_KBD_MENU_CLICK           NC
+/* Buttons */
+#define PINMAP_KBD_LOAD                 PG_1
+#define PINMAP_KBD_SAVE                 PF_9
+#define PINMAP_KBD_EDIT                 PF_8
+#define PINMAP_KBD_ALT                  PF_2
+#define PINMAP_KBD_NEXT                 PE_4
+#define PINMAP_KBD_PREV                 PE_5
+#define PINMAP_KBD_PRELISTEN            PE_2
 
-/** Speakjet **/
+/* Lighted toggles */
+#define PINMAP_KBD_INDIVIDUAL           PG_4
+#define PINMAP_KBD_INDIVIDUAL_OUT       PD_10
+#define PINMAP_KBD_CMDPHON              PG_8
+#define PINMAP_KBD_CMDPHON_OUT          PE_0
+
+/* Encoders (+/-) */
+#define PINMAP_KBD_FILE                 PE_1, PG_0
+#define PINMAP_KBD_DATA                 PD_0, PD_1
+#define PINMAP_KBD_PITCH                PF_0, PF_1
+#define PINMAP_KBD_MENU                 PD_7, PD_6
+#define PINMAP_KBD_MENU_CLICK           PE_3
+
+/** Soundchips **/
+/* Speakjet */
 #define PINMAP_SPEAKJET_TX              NC
 #define PINMAP_SPEAKJET_RST             NC
 #define PINMAP_SPEAKJET_READY           NC
