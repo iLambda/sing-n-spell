@@ -135,7 +135,7 @@ MBED_FORCEINLINE uint8_t drawPhon(uint8_t* const& screenbuf, const int& x, const
 /* Draw the current data */
 MBED_FORCEINLINE void drawData(SerialLCD* const& display, const synth::worditerator_t& it) {
     /* Write frame to buffer */
-    utils::uint8_hex_to_str(&str_data_pos[0], it.position());
+    utils::uint8_hex_to_str(&str_data_pos[0], it.position() + 1);
     utils::uint8_hex_to_str(&str_data_pos[3], it.length());
     /* Get name for current value */
     auto name = synth::tts_code_name(it.get());
