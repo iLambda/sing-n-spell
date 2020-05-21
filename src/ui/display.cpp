@@ -181,6 +181,8 @@ void ui::Display::eventThread()
             if (event->id != Display::m_currentScreen) {
                 /* Lock the input mutex */
                 Display::m_inputMutex.lock();
+                /* Wait until previous repaint is over */
+                if (dirty) { Display::dry(); }
                 /* Set current id */
                 Display::m_currentScreen = event->id;
                 /* Clear flags in case */
@@ -189,10 +191,10 @@ void ui::Display::eventThread()
                 event->screen->reset(event->screen->state);
                 /* Set as dirty. Clear the screen */
                 Display::dirty(true);
-                /* Release */
-                Display::m_inputMutex.unlock();
                 /* Wait until repaint is over */
                 Display::dry();
+                /* Release */
+                Display::m_inputMutex.unlock();
                 /* Free the event */
                 Display::m_screenEventPool.free(event);
             }
