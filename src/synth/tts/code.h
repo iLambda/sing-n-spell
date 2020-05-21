@@ -9,7 +9,12 @@
 #endif
 
 #define TTS_CMD_FIRST           synth::tts_cmd_t::TTS_CMD_PAUSE0
-#define TTS_CMD_LAST            synth::tts_cmd_t::TTS_CMD_GROUP_END
+#define TTS_CMD_LAST            synth::tts_cmd_t::TTS_CMD_SUSTAIN_END
+#define TTS_CMD_COUNT           (TTS_CMD_LAST - TTS_CMD_FIRST + 1)
+
+#define TTS_PHON_FIRST          128
+#define TTS_PHON_LAST           255
+#define TTS_PHON_COUNT          (TTS_PHON_LAST - TTS_PHON_FIRST + 1)
 
 namespace synth {
 
@@ -30,7 +35,9 @@ namespace synth {
         TTS_CMD_DELAY_10MS,
         TTS_CMD_PITCH,
         TTS_CMD_GROUP_OPEN,
-        TTS_CMD_GROUP_END
+        TTS_CMD_GROUP_END,
+        TTS_CMD_SUSTAIN_OPEN,
+        TTS_CMD_SUSTAIN_END
     };
     /* A tts phoneme */
     enum tts_phoneme_t : uint8_t {
@@ -169,6 +176,13 @@ namespace synth {
         TTS_TYPE_COMMAND,
         TTS_TYPE_INVALID
     };
+
+    /* Assert things about command values */
+    static_assert(TTS_CMD_FIRST == 0, "TTS_CMD_FIRST must be equal to zero!");
+    static_assert(TTS_CMD_LAST >= TTS_CMD_FIRST, "TTS_CMD_FIRST and TTS_CMD_LAST are in the wrong order.");
+    static_assert(TTS_PHON_FIRST > TTS_CMD_LAST, "TTS_CMD and TTS_PHON can't overlap!");
+    static_assert(TTS_PHON_LAST >= TTS_PHON_FIRST, "TTS_PHON_FIRST and TTS_PHON_LAST are in the wrong order.");
+    static_assert(TTS_PHON_END == 0xFF, "TTS_PHON_END must be 0xFF !!");
 
     /* Check if value is a command or a phoneme */
     tts_code_type_t tts_code_type(const uint8_t& code);

@@ -2,6 +2,7 @@
 #include <rtos.h>
 
 #include "code.h"
+#include "utils/utils.h"
 
 /* The table of legible names for a command */
 const char* const tts_cmd_instruction[] = {
@@ -10,8 +11,10 @@ const char* const tts_cmd_instruction[] = {
     "FA", "SL", 
     "STS", "RLX", 
     "__\x06", "D__", "\x07P",
-    "(", ")"
+    "(", ")", "{", "}"
 };
+static_assert(utils::size(tts_cmd_instruction) == TTS_CMD_COUNT, "tts_cmd_instruction size mismatch!");
+
 /* The table of legible names for a phoneme */
 const char* const tts_phoneme_instruction[] = {
     "IY", "IH", "EY", "EH", "AY", 
@@ -40,7 +43,8 @@ const char* const tts_phoneme_instruction[] = {
     "D3", "D4", "D5", "D6", "D7", 
     "D8", "D9", "D10", "D11", "M0", 
     "M1", "M2", "--"
- };
+};
+static_assert(utils::size(tts_phoneme_instruction) == TTS_PHON_COUNT, "tts_phoneme_instruction size mismatch!");
 
 /* The table of legible names for a command */
 const char* const tts_cmd_name[] = {
@@ -49,8 +53,11 @@ const char* const tts_cmd_name[] = {
     "Fast", "Slow", 
     "Stress", "Relax", 
     "Repeat for", "Delay for", "Pitch",
-    "Begin group", "End group"
+    "Begin group", "End group",
+    "Begin sustain", "End sustain"
 };
+static_assert(utils::size(tts_cmd_name) == TTS_CMD_COUNT, "tts_cmd_name size mismatch!");
+
 /* The table of legible names for a phoneme */
 const char tts_phoneme_long_vowel[] = "Long vowel";
 const char tts_phoneme_short_vowel[] = "Short vowel";
@@ -199,6 +206,7 @@ const char* const tts_phoneme_name[] = {
     tts_phoneme_misc,
     tts_phoneme_end
  };
+static_assert(utils::size(tts_phoneme_name) == TTS_PHON_COUNT, "tts_phoneme_name size mismatch!");
 
 /* Check if value is a command or a phoneme */
 synth::tts_code_type_t synth::tts_code_type(const uint8_t& code) {
@@ -313,8 +321,22 @@ void synth::tts_code_delta(uint8_t& code, int8_t delta) {
     switch (tts_code_type(code)) {
         /* If command */
         case TTS_TYPE_COMMAND: {
-            code += (uint8_t)delta;
-            code = (code % (TTS_CMD_LAST - TTS_CMD_FIRST + 1)) + TTS_CMD_FIRST;
+            /* Clamp delta and bring code to the right offset*/
+            delta %= TTS_CMD_COUNT;
+            /* Check its sign */
+            if (delta >= 0) {
+                /* Positive. This is OK */
+                /* Just add and modulo */
+                code += (uint8_t)delta;
+                code %= TTS_CMD_COUNT;
+            } else {
+                /* Negative. Handle underflow */
+                /* Make delta positive */
+                delta = -delta;
+                /* Check for potential underflow */
+                if (code >= delta) { code -= (uint8_t)delta; }
+                else { code = TTS_CMD_COUNT - delta + code; }
+            }
             break;
         }
 
