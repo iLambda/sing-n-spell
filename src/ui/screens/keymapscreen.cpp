@@ -5,6 +5,7 @@
 #include "synth/tts/code.h"
 #include "ui/display.h"
 #include "ui/screens/spellscreen.h"
+#include "ui/screens/settingscreen.h"
 #include "utils/string.h"
 #include "utils/utils.h"
 
@@ -301,6 +302,12 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
     /**** INPUT ****/
 
     /** Gutter part **/
+    /* Menu encoder click */
+    if (inputs.buttons.selector) {
+        /* Go to settings screen */
+        ui::Display::go<SettingScreen>();
+        
+    }
 
     /** Global part **/
     

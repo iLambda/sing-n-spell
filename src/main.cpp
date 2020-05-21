@@ -5,6 +5,7 @@
 #include "ui/screens/bootscreen.h"
 #include "ui/screens/keymapscreen.h"
 #include "ui/screens/spellscreen.h"
+#include "ui/screens/settingscreen.h"
 #include "synth/engine.h"
 #include "utils/debugging.h"
 
@@ -12,6 +13,7 @@
 ui::screen::BootScreen bootScreen;
 ui::screen::KeymapScreen keymapScreen;
 ui::screen::SpellScreen spellScreen;
+ui::screen::SettingScreen settingScreen;
 
 int main() {
 
@@ -31,6 +33,7 @@ int main() {
   ui::Display::add(bootScreen);
   ui::Display::add(keymapScreen);
   ui::Display::add(spellScreen);
+  ui::Display::add(settingScreen);
   ui::Display::go(bootScreen);
   ui::Display::run();
 
