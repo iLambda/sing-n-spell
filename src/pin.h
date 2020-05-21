@@ -33,10 +33,16 @@
 
 /** Soundchips **/
 /* Speakjet */
-#define PINMAP_SPEAKJET_TX              NC
-#define PINMAP_SPEAKJET_RST             NC
-#define PINMAP_SPEAKJET_READY           NC
-#define PINMAP_SPEAKJET_SPK             NC
+#define PINMAP_SPEAKJET_RX              D1
+#define PINMAP_SPEAKJET_RST             D3
+#define PINMAP_SPEAKJET_SPK             D4
+#define PINMAP_SPEAKJET_READY           D13
 
+/* TTS256 */
+#define PINMAP_TTS256_TX                NC
+#define PINMAP_TTS256_RX                NC
+#define PINMAP_TTS256_RST               NC
+#define PINMAP_TTS256_SJ_TX             NC 
+#define PINMAP_TTS256_SJ_RDY            NC
 
 #endif
