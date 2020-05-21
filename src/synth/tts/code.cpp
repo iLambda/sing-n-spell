@@ -9,7 +9,7 @@ const char* const tts_cmd_instruction[] = {
     "W3", "W6", "W9", 
     "FA", "SL", 
     "STS", "RLX", 
-    "R", "D", "\x07P",
+    "__\x06", "D__", "\x07P",
     "(", ")"
 };
 /* The table of legible names for a phoneme */

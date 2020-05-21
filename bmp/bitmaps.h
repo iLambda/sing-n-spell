@@ -9,6 +9,7 @@ namespace bmp {
 		#include "lcd/scrollDown.h"
 		#include "lcd/scrollUp.h"
 		#include "lcd/space.h"
+		#include "lcd/times.h"
 	}
 }
 #endif

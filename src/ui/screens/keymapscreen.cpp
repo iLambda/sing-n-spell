@@ -56,6 +56,7 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
     self->m_workbenchValueChanged = false;
     /* Add custom characters */
+    ui::Display::driver()->createChar(6, bmp::lcd::BMP_LCD_TIMES);
     ui::Display::driver()->createChar(7, bmp::lcd::BMP_LCD_DELTA);
 }
 
