@@ -15,7 +15,7 @@
 
 #include "io/midi.h"
 #include "io/state.h"
-#include "utils/event.h"
+#include "utils/data/event.h"
 
 namespace io {
 
