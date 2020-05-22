@@ -11,9 +11,16 @@ namespace dbg {
 
     void printf(const char* format, ...);
 
-    MBED_FORCEINLINE void put(const char* text) {
+    MBED_FORCEINLINE void puts(const char* text) {
         #ifdef BUILD_CONFIG_DEBUG
             dbg::serial.puts(text);
+        #endif
+    }
+
+
+    MBED_FORCEINLINE void putc(char text) {
+        #ifdef BUILD_CONFIG_DEBUG
+            dbg::serial.putc(text);
         #endif
     }
 

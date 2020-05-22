@@ -1,6 +1,6 @@
 #include "debugging.h"
 
-mbed::RawSerial dbg::serial(USBTX, USBRX);
+mbed::RawSerial dbg::serial(USBTX, USBRX, 31250);
 mbed::BusOut dbg::leds(LED1, LED2, LED3);
 
 void dbg::printf(const char* format, ...) {
