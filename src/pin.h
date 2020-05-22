@@ -31,6 +31,11 @@
 #define PINMAP_KBD_MENU                 PD_7, PD_6
 #define PINMAP_KBD_MENU_CLICK           PE_3
 
+/** Devices **/
+/* MIDI */
+#define PINMAP_DEV_MIDI_OUT          NC          
+#define PINMAP_DEV_MIDI_IN           NC
+
 /** Soundchips **/
 /* Speakjet */
 #define PINMAP_SPEAKJET_RX              D1
