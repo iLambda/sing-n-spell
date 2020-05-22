@@ -39,7 +39,7 @@ namespace io {
             static Thread m_threadMidi;
 
             /* The midi queue */
-            static Mail<uint8_t, IO_CONTROLLER_MIDI_QUEUE_SIZE> m_midiMail;
+            static Mail<uint8_t, IO_CONTROLLER_MIDI_QUEUE_SIZE>* m_midiMail;
 
             /* The midi received event */
             static utils::Event<const midimsg_t&> m_eventMidiReceive;
@@ -65,7 +65,7 @@ namespace io {
             
         private:
             /* Midi in interrupt */
-            static void isrMidi(RawSerial* self);
+            static void isrMidi();
 
             /* Update buttons */
             __STATIC_FORCEINLINE void updateButtons();

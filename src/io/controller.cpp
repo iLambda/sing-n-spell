@@ -2,7 +2,7 @@
 #include "midi.h"
 #include "pin.h"
 #include "utils/dev/encoder.h"
-
+#include "utils/debugging.h"
 
 Thread io::Controller::m_threadInput;
 Thread io::Controller::m_threadMidi;
@@ -13,24 +13,33 @@ io::outputstate_t io::Controller::m_outState = {0};
 utils::Event<const io::midimsg_t&> io::Controller::m_eventMidiReceive;
 utils::Event<const io::inputstate_t&> io::Controller::m_eventInputReceive;
 RawSerial* io::Controller::m_midi = nullptr;
+Mail<uint8_t, IO_CONTROLLER_MIDI_QUEUE_SIZE>* io::Controller::m_midiMail = new Mail<uint8_t, IO_CONTROLLER_MIDI_QUEUE_SIZE>();
 
 void io::Controller::run() {
-    /* Make MIDI */
-    //Controller::m_midi = new RawSerial(D1, D0, MIDI_BAUD_RATE);
     /* Start the UI and event threads */
     Controller::m_threadInput.start(callback(&Controller::inputThread));
     Controller::m_threadInput.set_priority(IO_CONTROLLER_THREAD_PRIORITY_INPUT);
+    /* Make MIDI */
+    #ifdef DEBUG_MODE_MIDI_USB 
+        Controller::m_midi = &dbg::serial;
+    #else
+        Controller::m_midi = new RawSerial(PINMAP_DEV_MIDI_OUT, PINMAP_DEV_MIDI_IN, MIDI_BAUD_RATE);
+    #endif
+    Controller::m_midi->attach((&Controller::isrMidi), SerialBase::RxIrq);
+    /* Start MIDI thread */
+    Controller::m_threadMidi.start(callback(&Controller::midiThread));
+    Controller::m_threadMidi.set_priority(IO_CONTROLLER_THREAD_PRIORITY_MIDI);
 }
 
-void io::Controller::isrMidi(RawSerial* self) {
+void io::Controller::isrMidi() {
     /*
      *  CAREFUL !!! This is ISR context
      */
     /* Send data into queue */
-    uint8_t* data = Controller::m_midiMail.alloc();
-    *data = self->getc();
+    uint8_t* data = Controller::m_midiMail->alloc();
+    *data = Controller::m_midi->getc();
     /* Put in queue */
-    m_midiMail.put(data);
+    m_midiMail->put(data);
 }
 
 void io::Controller::updateButtons() {
@@ -93,24 +102,24 @@ void io::Controller::midiThread() {
     /* Thread loop */
     while (1) {
         /* Get the status byte  */
-        mail = Controller::m_midiMail.get(osWaitForever);
+        mail = Controller::m_midiMail->get(osWaitForever);
         /* Get the status byte, and payload size. Free data */
         uint8_t status = *((uint8_t*)mail.value.p);
         int8_t payloadsize = midi_message_len(status) - 1;
-        Controller::m_midiMail.free((uint8_t*)mail.value.p);
+        Controller::m_midiMail->free((uint8_t*)mail.value.p);
         /* Reset message, fill in status byte */
         midimessage = {0};
         midimessage.status.value = status;
         /* Get as many payload bytes as needed */
         for (int8_t i = 0; i < payloadsize ; i++) {
             /* Read mail */
-            mail = Controller::m_midiMail.get(IO_CONTROLLER_MIDI_MSG_TIMEOUT);
+            mail = Controller::m_midiMail->get(IO_CONTROLLER_MIDI_MSG_TIMEOUT);
             /* If nothing receive, forget this whole command 
                and go back to waiting for a stat byte */
             if (mail.status != osEventMail) { goto payload_fail; }
             /* Get data and free mail */
             payload[i] = *((uint8_t*)mail.value.p);
-            Controller::m_midiMail.free((uint8_t*)mail.value.p);
+            Controller::m_midiMail->free((uint8_t*)mail.value.p);
             /* Increment */
             i++;
         }
@@ -124,11 +133,6 @@ void io::Controller::midiThread() {
 }
 
 void io::Controller::inputThread() {
-    /* Start MIDI thread and hook interrupt */
-    //Controller::m_threadMidi.start(callback(&Controller::midiThread));
-    //Controller::m_threadMidi.set_priority(IO_CONTROLLER_THREAD_PRIORITY_MIDI);
-    //Controller::m_midi->attach(callback(&Controller::isrMidi, Controller::m_midi));
-
     /* Thread loop */
     while(1) {
         /* Update buttons */
