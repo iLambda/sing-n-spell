@@ -239,6 +239,9 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         /* Dirty keymode (and parameter name since it can change depending on mode ) */
         self->m_isDirty.mode = 1;
         self->m_isDirty.paramName = 1;
+        self->m_isDirty.frame = 1;
+        self->m_isDirty.frameData = 1;
+        self->m_isDirty.frameDatamode = 1;
     }
     /* If iterator changed */
     if (utils::preserved_changes_with(self->m_workbench, synth::Engine::workbenchIterator()) || self->m_workbenchValueChanged) {
@@ -331,8 +334,12 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
                 synth::Engine::key().mode == synth::KEY_MODE_GLOBAL
                     ? synth::KEY_MODE_LOCAL
                     : synth::KEY_MODE_GLOBAL;
-            /* And change it */
+            /* Tidy workbench */
+            synth::Engine::tidy();
+            /* Change the mode */
             synth::Engine::key().mode = mode;
+            /* Fetch to workbench */
+            synth::Engine::fetch();
         }
     }
 
