@@ -140,6 +140,8 @@ namespace synth {
             bool next() const;
             /* Previous */
             bool previous() const;
+            /* Select a value at index i */
+            bool select(size_t i) const;
             /* Get value at */
             uint8_t& at();
             /* Observe value at */

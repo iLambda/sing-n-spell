@@ -53,6 +53,22 @@ void worditerator_t::last() const {
     /* Go at end */
     this->m_position = this->m_word->bin->blockSize - 1;
 }
+
+/* Select a value */
+bool worditerator_t::select(size_t i) const {
+    /* If null, return */
+    if (m_word == nullptr) { return false; }
+    /* If invalid position, return false */
+    if (!(i >= 0 && i < this->m_word->bin->blockSize)) {
+        return false;
+    }
+    /* Set */
+    this->m_position = i;
+    /* OK */
+    return true;
+}
+
+
 /* Select end of sequence */
 void worditerator_t::end() const {
     /* If null, return */
