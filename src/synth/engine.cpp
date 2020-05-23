@@ -81,12 +81,10 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
 
 /* Write workbench to key */
 void Engine::tidy() {
-    /* If not dirty, it's all good */
-    if (!Engine::m_workbenchDirty) { return; }
+    /* Save the last selected idx */
+    Engine::lastPosition() = Engine::workbenchIterator().position();
     /* Shrink-clone word into place (and COLLAPSE ZERO LENGTH) */
     BIND_OOM(Lexicon::shrinkCopy(Engine::m_workbench, Engine::word(), true));
-    /* Undirty */
-    Engine::m_workbenchDirty = false;
 }
 
 /* Select a key, given a note */
@@ -102,8 +100,8 @@ void Engine::select(uint8_t midinote) {
     /* If old key and next key point to the same word, no need to reload */
     if (Engine::wordOf(nextKey) == Engine::wordOf(oldKey)) { return; }
 
-    /* Reset the iterator to first frame */
-    Engine::workbenchIterator().first();
+    /* Reset the iterator to last saved position */
+    Engine::workbenchIterator().select(Engine::lastPosition());
     /* Copy the keymap data into the workbench 
        (copy cannot fail, workbench is always biggest) */
     Lexicon::copy(Engine::word(), Engine::m_workbench);

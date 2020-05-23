@@ -80,6 +80,13 @@ namespace synth {
             
         private:
             /* Word at */
+            __STATIC_FORCEINLINE uint8_t& lastPosition() {
+                /* Check if current word is in global or local mode */
+                return Engine::m_keymap.keys[Engine::m_key].mode == keymode_t::KEY_MODE_LOCAL
+                    ? Engine::m_keymap.keys[Engine::m_key].lastIdx
+                    : Engine::m_keymap.lastGlobalIdx;
+            }
+            /* Word at */
             __STATIC_FORCEINLINE word_t*& wordOf(uint8_t idx) {
                 /* Check if current word is in global or local mode */
                 return Engine::m_keymap.keys[idx].mode == keymode_t::KEY_MODE_LOCAL

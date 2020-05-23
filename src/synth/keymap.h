@@ -24,11 +24,15 @@ namespace synth {
         keymode_t mode;
         /* The corresponding voice sample */
         word_t* word;
+        /* The last selected index */
+        uint8_t lastIdx;
     };
 
     struct keymap_t {
         /* The global word */
         word_t* global;
+        /* The last selected index for the global word */
+        uint8_t lastGlobalIdx;
         /* The list of special override from keys */
         keyentry_t keys[KEYMAP_LENGTH];
     };
