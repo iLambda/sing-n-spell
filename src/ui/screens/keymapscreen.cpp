@@ -83,6 +83,8 @@ MBED_FORCEINLINE void drawNote(SerialLCD* const& display, uint8_t note) {
     /* Draw note */
     uint8_t len = io::midi_note_to_cstr(str_buf_note, note);
     /* Write it */
+    display->setCursor(ui::Display::screenWidth() - 3, 0);
+    display->write(" ");
     display->setCursor(ui::Display::screenWidth() - len, 0);
     display->write(str_buf_note);
 }
