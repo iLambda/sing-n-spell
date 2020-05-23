@@ -351,11 +351,6 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             synth::tts_code_transform(synth::Engine::workbenchIterator().at());
             /* Say it's been modified */
             self->m_workbenchValueChanged = true;
-
-            // /* Compute toggled mode */
-            // auto mode = self->m_datamode.current == DATAMODE_PHN ? DATAMODE_CMD : DATAMODE_PHN;
-            // /* And change it */
-            // utils::preserved_update(self->m_datamode, mode);
         }
     }
 
@@ -402,7 +397,6 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             /* Alt not pressed */ 
             /* Modify frame (TODO : do)*/
             synth::tts_code_delta(synth::Engine::workbenchIterator().at(), inputs.encoders.data);
-            // synth::Engine::workbenchIterator().at() += inputs.encoders.data;
             /* Say it's been modified */
             self->m_workbenchValueChanged = true;
         }
