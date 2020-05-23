@@ -24,6 +24,13 @@ namespace utils {
         target.current = target.last = value;
     }
 
+    /* A constant value */
+    template <class T>
+    MBED_FORCEINLINE constexpr preserved_t<T> preserved_constexpr(const T& value) {
+        /* Initialize to constant */
+        return { value, value };
+    }
+
     template <class T>
     MBED_FORCEINLINE preserved_t<T> preserved_constant(const T& value) {
         /* Initialize to constant */
