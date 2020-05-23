@@ -1,8 +1,9 @@
 #include "controller.h"
-#include "midi.h"
 #include "pin.h"
 #include "utils/dev/encoder.h"
 #include "utils/debugging.h"
+
+#include "libmidi.h"
 
 Thread io::Controller::m_threadInput;
 Thread io::Controller::m_threadMidi;
@@ -93,43 +94,74 @@ void io::Controller::updateButtons() {
         & (~Controller::m_buttonsAbsoluteOld.value);
 }
 
+void io::Controller::sendMidi(libmidi_event_type event, uint8_t chan, uint8_t data1, uint8_t data2) {
+    /* Static data */
+    static midimsg_t msg = {0};
+    /* Parse message */
+    midi_of_libmidi(msg, event, chan, data1, data2);
+    /* Fire event */
+    Controller::m_eventMidiReceive.fire(msg);
+}
+
 void io::Controller::midiThread() {
     /* Some data */
-    uint8_t payload[2] = {0};
     osEvent mail;
-    midimsg_t midimessage;
-
+    /* Setup callback */
+    libmidi_event_handler(&io::Controller::sendMidi);
     /* Thread loop */
     while (1) {
-        /* Get the status byte  */
+        /* Get a byte */
         mail = Controller::m_midiMail->get(osWaitForever);
-        /* Get the status byte, and payload size. Free data */
-        uint8_t status = *((uint8_t*)mail.value.p);
-        int8_t payloadsize = midi_message_len(status) - 1;
+        /* Send it through libmidi */
+        libmidi_receive_byte(*((uint8_t*)mail.value.p));
+        /* Free the mail */
         Controller::m_midiMail->free((uint8_t*)mail.value.p);
-        /* Reset message, fill in status byte */
-        midimessage = {0};
-        midimessage.status.value = status;
-        /* Get as many payload bytes as needed */
-        for (int8_t i = 0; i < payloadsize ; i++) {
-            /* Read mail */
-            mail = Controller::m_midiMail->get(IO_CONTROLLER_MIDI_MSG_TIMEOUT);
-            /* If nothing receive, forget this whole command 
-               and go back to waiting for a stat byte */
-            if (mail.status != osEventMail) { goto payload_fail; }
-            /* Get data and free mail */
-            payload[i] = *((uint8_t*)mail.value.p);
-            Controller::m_midiMail->free((uint8_t*)mail.value.p);
-            /* Increment */
-            i++;
-        }
-        /* Yeet that message */
-        midimessage.data.byte1 = payload[0];
-        midimessage.data.byte2 = payload[1];
-        Controller::m_eventMidiReceive.fire(midimessage);
-        /* Loop break label */
-        payload_fail:;
     }
+
+
+    /* Some data */
+    // uint8_t payload[2] = {0};
+    // osEvent mail;
+    // midimsg_t midimessage;
+
+    // /* Thread loop */
+    // while (1) {
+    //     /* Get the status byte  */
+    //     mail = Controller::m_midiMail->get(osWaitForever);
+    //     /* Get the status byte, and payload size. Free data */
+    //     uint8_t status = *((uint8_t*)mail.value.p);
+    //     int8_t payloadsize = midi_message_len(status) - 1;
+    //     Controller::m_midiMail->free((uint8_t*)mail.value.p);
+
+    //     midimessage.status.value = status;
+    //     midimessage.data.value = payloadsize;
+    //     Controller::m_eventMidiReceive.fire(midimessage);
+
+    //     continue;
+
+    //     /* Reset message, fill in status byte */
+    //     midimessage = {0};
+    //     midimessage.status.value = status;
+    //     /* Get as many payload bytes as needed */
+    //     for (int8_t i = 0; i < payloadsize ; i++) {
+    //         /* Read mail */
+    //         mail = Controller::m_midiMail->get(IO_CONTROLLER_MIDI_MSG_TIMEOUT);
+    //         /* If nothing receive, forget this whole command 
+    //            and go back to waiting for a stat byte */
+    //         if (mail.status != osEventMail) { goto payload_fail; }
+    //         /* Get data and free mail */
+    //         payload[i] = *((uint8_t*)mail.value.p);
+    //         Controller::m_midiMail->free((uint8_t*)mail.value.p);
+    //         /* Increment */
+    //         i++;
+    //     }
+    //     /* Yeet that message */
+    //     midimessage.data.byte1 = payload[0];
+    //     midimessage.data.byte2 = payload[1];
+    //     Controller::m_eventMidiReceive.fire(midimessage);
+    //     /* Loop break label */
+    //     payload_fail:;
+    // }
 }
 
 void io::Controller::inputThread() {

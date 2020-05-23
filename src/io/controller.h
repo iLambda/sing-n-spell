@@ -11,6 +11,7 @@
 #define IO_CONTROLLER_THREAD_FLAG_MIDI_RECEIVED  0x01
 
 #include <mbed.h>
+#include <libmidi.h>
 #include <rtos.h>
 
 #include "io/midi.h"
@@ -68,7 +69,9 @@ namespace io {
             static void isrMidi();
 
             /* Update buttons */
-            __STATIC_FORCEINLINE void updateButtons();
+            static void updateButtons();
+            /* Send midi msg */
+            static void sendMidi(libmidi_event_type event, uint8_t chan, uint8_t data1, uint8_t data2);
 
             /* The input thread */
             static void inputThread();
