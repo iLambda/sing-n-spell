@@ -8,6 +8,7 @@
 #include "io/midi.h"
 #include "synth/keymap.h"
 #include "utils/data/dllist.h"
+#include "utils/data/preserved.h"
 #include "utils/debugging.h"
 
 #define ENGINE_NOTE_DEFAULT             48      /* Default note is C3 */
@@ -29,6 +30,11 @@ namespace synth {
             static worditerator_t* m_workbenchIterator;
             /* Has the workbench been dirtied ? */
             static bool m_workbenchDirty;
+
+            /* Is the controller playing ? */
+            static bool m_controllerPlaying;
+            /* The state of the edit mode button */
+            static utils::preserved_t<bool> m_editMode;
             
         private:
             /* Create some storage */
@@ -73,12 +79,16 @@ namespace synth {
             }
             /* Checks if we're in edit mode */
             __STATIC_FORCEINLINE bool editMode() {
-                return io::Controller::input().edit;
+                /* We're in edit mode iff the toggle is in edit mode, 
+                   and the controller is not playing */
+                return (io::Controller::input().edit && !Engine::m_controllerPlaying);
             }
 
         private:
             /* On midi received */
             static void midiReceived(const io::midimsg_t& midi);
+            /* On input received */
+            static void inputReceived(const io::inputstate_t& input);
             
         private:
             /* Word at */

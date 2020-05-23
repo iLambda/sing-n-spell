@@ -16,6 +16,10 @@ word_t* Engine::m_workbench = nullptr;
 worditerator_t* Engine::m_workbenchIterator = nullptr;
 /* Has the workbench been dirtied ? */
 bool Engine::m_workbenchDirty = false;
+/* Is the controller playing ? */
+bool Engine::m_controllerPlaying = false;
+/* The state of the edit mode button */
+utils::preserved_t<bool> Engine::m_editMode = utils::preserved_constexpr(false);
 
 /* Run the engine */
 void Engine::run() {
@@ -37,6 +41,20 @@ void Engine::run() {
 
     /* Subscribe to midi event */
     io::Controller::midiReceive() += callback(&Engine::midiReceived);
+    /* Subscribe to inputs */
+    io::Controller::inputReceive() += callback(&Engine::inputReceived);
+}
+
+/* On input received */
+void Engine::inputReceived(const io::inputstate_t& input) {
+    /* Check if changed */
+    if (utils::preserved_changes_with(Engine::m_editMode, !!input.edit)) {
+        /* If we just got off edit mode */
+        if (!Engine::m_editMode.current) {
+            /* Reset the controller playing boolean */
+            Engine::m_controllerPlaying = false;
+        }
+    }
 }
 
 /* On midi received */
@@ -45,21 +63,38 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
     /* TODO : SEPARATE THREAD WITH EVENTQUEUE
        SO WE DON'T MISS ANY MIDI MESSAGES */
     switch (io::midi_message_type(midi)) {
-        /* CLassic messages */
-        case io::MIDI_TYPE_NOTEON:
+
+        /* Note on / noteoff */
+        case io::MIDI_TYPE_NOTEON: {
+            /* If edit mode is enabled */
             if (Engine::editMode()) {
+                /* Select the pressed key */
                 Engine::select(midi.key);
             }
             return;
-
-        case io::MIDI_TYPE_NOTEOFF:
-        case io::MIDI_TYPE_START:
-        case io::MIDI_TYPE_STOP: {
+        }
+        case io::MIDI_TYPE_NOTEOFF: {
             return;
         }
+
+        /* Handle start / stop messages */
+        case io::MIDI_TYPE_START: {
+            /* Set playing */
+            Engine::m_controllerPlaying = true;
+            return;
+        }
+        case io::MIDI_TYPE_STOP: {
+            /* Set playing */
+            Engine::m_controllerPlaying = false;
+            return;
+        }
+
+        /* */
+        // case io::MIDI_TYPE_PITCHBEND:
+        // case io::MIDI_TYPE_PROGCHANGE:
+        
         /* Controller change */
         case io::MIDI_TYPE_CC: {
-            /* If we got a cc, check its value */
             switch (midi.controller) {
                 /* All notes / sound off */
                 case io::MIDI_CC_ALLSOUNDOFF:
