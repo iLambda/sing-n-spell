@@ -47,11 +47,9 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
     switch (io::midi_message_type(midi)) {
         /* CLassic messages */
         case io::MIDI_TYPE_NOTEON:
-            /*if (Engine::editMode()) {
-                Engine::select(midi.data.key);
-
-            }*/
-
+            if (Engine::editMode()) {
+                Engine::select(midi.key);
+            }
             return;
 
         case io::MIDI_TYPE_NOTEOFF:
@@ -62,7 +60,7 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
         /* Controller change */
         case io::MIDI_TYPE_CC: {
             /* If we got a cc, check its value */
-            switch (midi.data.controller) {
+            switch (midi.controller) {
                 /* All notes / sound off */
                 case io::MIDI_CC_ALLSOUNDOFF:
                 case io::MIDI_CC_NOTEOFF_ALL: {
@@ -70,7 +68,7 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
                 }
                 /* Other CC msgs */
                 default: {
-                    if (io::midi_is_special_cc(midi.data.controller)) { return; }
+                    if (io::midi_is_special_cc(midi.controller)) { return; }
                     return;
                 }
             }

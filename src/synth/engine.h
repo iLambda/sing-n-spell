@@ -69,6 +69,10 @@ namespace synth {
             __STATIC_FORCEINLINE bool dirty() {
                 return Engine::m_workbenchDirty;
             }
+            /* Checks if we're in edit mode */
+            __STATIC_FORCEINLINE bool editMode() {
+                return io::Controller::input().edit;
+            }
 
         private:
             /* On midi received */
