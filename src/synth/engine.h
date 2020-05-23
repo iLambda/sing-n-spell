@@ -39,6 +39,8 @@ namespace synth {
             static void run();
             /* Tidy workbench (write the current workbench to the keymap) */
             static void tidy();
+            /* Fetches current word in memory and write it in the wordbench */
+            static void fetch();
             /* Select a key, given a note */
             static void select(uint8_t midinote);
 

@@ -87,6 +87,16 @@ void Engine::tidy() {
     BIND_OOM(Lexicon::shrinkCopy(Engine::m_workbench, Engine::word(), true));
 }
 
+
+/* Fetches current word in memory and write it in the wordbench */
+void Engine::fetch() {
+    /* Copy the keymap data into the workbench 
+       (copy cannot fail, workbench is always biggest) */
+    Lexicon::copy(Engine::word(), Engine::m_workbench);
+    /* Reset the iterator to last saved position */
+    Engine::workbenchIterator().select(Engine::lastPosition());
+}
+
 /* Select a key, given a note */
 void Engine::select(uint8_t midinote) {
     /* Convert note to key ID */
@@ -99,10 +109,6 @@ void Engine::select(uint8_t midinote) {
     Engine::m_key = nextKey;
     /* If old key and next key point to the same word, no need to reload */
     if (Engine::wordOf(nextKey) == Engine::wordOf(oldKey)) { return; }
-
-    /* Reset the iterator to last saved position */
-    Engine::workbenchIterator().select(Engine::lastPosition());
-    /* Copy the keymap data into the workbench 
-       (copy cannot fail, workbench is always biggest) */
-    Lexicon::copy(Engine::word(), Engine::m_workbench);
+    /* Fetch the contents of the memory into the wordbench */
+    Engine::fetch();
 }
