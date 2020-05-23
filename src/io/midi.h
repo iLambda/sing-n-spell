@@ -130,6 +130,10 @@ namespace io {
         return (msg.status & 0xF0) != 0xF0 ? (msg.status & 0x0F) : 0xFF;
     }
 
+    MBED_FORCEINLINE int16_t midi_message_bend(const midimsg_t& msg) {
+        return (int16_t)((((uint16_t)msg.data1 & 0x007F) | ((uint16_t)msg.data2 << 7)) & 0x3FFF) - 0x2000;
+    }
+
     /* From libmidi */
     MBED_FORCEINLINE void midi_of_libmidi(midimsg_t& msg, libmidi_event_type evt, uint8_t chan, uint8_t data1, uint8_t data2) {
         /* Fill */
