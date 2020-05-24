@@ -41,21 +41,25 @@ void worditerator_t::context(size_t n, size_t m, uint8_t* const& before, uint8_t
 }
 
 /* Select first element */
-void worditerator_t::first() const { 
+worditerator_t& worditerator_t::first() { 
     /* Set position */
     this->m_position = 0;
+    /* Return self */
+    return *this;
 }
 
 /* Select last element */
-void worditerator_t::last() const {
+worditerator_t& worditerator_t::last() {
     /* If null, return */
-    if (m_word == nullptr) { return; }
+    if (m_word == nullptr) { return *this; }
     /* Go at end */
     this->m_position = this->m_word->bin->blockSize - 1;
+    /* Return self */
+    return *this;
 }
 
 /* Select a value */
-bool worditerator_t::select(size_t i) const {
+bool worditerator_t::select(size_t i) {
     /* If null, return */
     if (m_word == nullptr) { return false; }
     /* If invalid position, return false */
@@ -70,18 +74,20 @@ bool worditerator_t::select(size_t i) const {
 
 
 /* Select end of sequence */
-void worditerator_t::end() const {
+worditerator_t& worditerator_t::end() {
     /* If null, return */
-    if (m_word == nullptr) { return; }
+    if (m_word == nullptr) { return *this; }
     /* Go at end */
     size_t len;
     if ((len = Lexicon::length(this->m_word)) != WORD_INVALID_LENGTH) {
         this->m_position = len;
     }
+    /* Return self */
+    return *this;
 }
 
 /* Next */
-bool worditerator_t::next() const {
+bool worditerator_t::next() {
     /* If word is null, return */
     if (m_word == nullptr) { return false; }
     /* If at end of buffer, can't go forward */
@@ -92,7 +98,7 @@ bool worditerator_t::next() const {
     return true;
 }
 /* Previous */
-bool worditerator_t::previous() const {
+bool worditerator_t::previous() {
     /* If word is null, return */
     if (m_word == nullptr) { return false; }
     /* If position = 0, can't go back */

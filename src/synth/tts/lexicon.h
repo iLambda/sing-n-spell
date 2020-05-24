@@ -95,7 +95,7 @@ namespace synth {
         /* The underlying word */
         word_t* m_word = nullptr;
         /* The position */
-        mutable size_t m_position = 0;
+        size_t m_position = 0;
 
         /* Make an iterator */
         worditerator_t(word_t* word, size_t position = 0) 
@@ -130,18 +130,23 @@ namespace synth {
             /* Get the length */
             size_t length() const;
 
+            /* Clone an iterator */
+            inline worditerator_t clone() const {
+                return worditerator_t(*this);
+            }
+
             /* Select first element */
-            void first() const;
+            worditerator_t& first();
             /* Select last element */
-            void last() const;
+            worditerator_t& last();
             /* Select end of sequence */
-            void end() const;
+            worditerator_t& end();
             /* Next */
-            bool next() const;
+            bool next();
             /* Previous */
-            bool previous() const;
+            bool previous();
             /* Select a value at index i */
-            bool select(size_t i) const;
+            bool select(size_t i);
             /* Get value at */
             uint8_t& at();
             /* Observe value at */
