@@ -59,7 +59,7 @@ bool worditerator_t::select(size_t i) const {
     /* If null, return */
     if (m_word == nullptr) { return false; }
     /* If invalid position, return false */
-    if (!(i >= 0 && i < this->m_word->bin->blockSize)) {
+    if (i >= this->m_word->bin->blockSize) {
         return false;
     }
     /* Set */
