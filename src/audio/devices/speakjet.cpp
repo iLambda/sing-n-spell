@@ -1,4 +1,5 @@
 #include "speakjet.h"
+#include "utils/debugging.h"
 
 /* Create a SpeakJet interface */
 audio::dev::SpeakJet::SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking) {
@@ -11,6 +12,10 @@ audio::dev::SpeakJet::SpeakJet(PinName tx, PinName rst, PinName ready, PinName s
     /* Initialize iterator */
     this->m_word = nullptr;
 
+    /* Start thread */
+    this->m_speakThread.start(callback(this, &SpeakJet::speakThread));
+    this->m_speakThread.set_priority(AUDIO_SPEAKJET_THREAD_PRIORITY);
+
     /* Set to message thread when SPK pin falls (1 -> 0) */
     this->m_speaking->fall(callback(this, &SpeakJet::onDoneSpeaking));
     /* Set to message thread when RDY pin rises (0 -> 1) */
@@ -20,11 +25,8 @@ audio::dev::SpeakJet::SpeakJet(PinName tx, PinName rst, PinName ready, PinName s
     this->m_reset->write(0);
     ThisThread::sleep_for(100);
     this->m_reset->write(1);
-
-    /* Start thread */
-    this->m_speakThread.set_priority(AUDIO_SPEAKJET_THREAD_PRIORITY);
-    this->m_speakThread.start(callback(this, &SpeakJet::speakThread));
 }
+
 
 /* On ready */
 void audio::dev::SpeakJet::onReady() {
@@ -45,6 +47,8 @@ void audio::dev::SpeakJet::speakThread() {
     while(1) {
         /* Check if play */    
         ThisThread::flags_wait_all(AUDIO_SPEAKJET_THREAD_FLAG_PLAY);
+        /* Clear stop flags */
+        ThisThread::flags_clear(AUDIO_SPEAKJET_THREAD_FLAG_STOP);
         /* Check if iterator is null */
         if (this->m_word == nullptr) { continue; }
         /* Lock */
@@ -58,12 +62,16 @@ void audio::dev::SpeakJet::speakThread() {
                 /* Break from loop */
                 break;
             }
+            
             /* Wait for done speaking */
-            ThisThread::flags_wait_all(AUDIO_SPEAKJET_THREAD_FLAG_DONE_SPEAK);
+            // ThisThread::flags_wait_all(AUDIO_SPEAKJET_THREAD_FLAG_DONE_SPEAK);
+            
             /* Get it (TODO : ITERATOR TRANSFORM) */
             uint8_t code = this->m_word->get();
             /* Send it */
-            this->m_serial->putc(this->m_word->get());
+            this->m_serial->putc(code);
+            /* If code was end, return */
+            if (code == 0xFF) { break; }
 
         } while(this->m_word->next());
         /* Unlock */
