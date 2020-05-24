@@ -48,6 +48,9 @@ namespace ui {
                 utils::preserved_t<uint8_t*> m_paramTarget;
                 /* The current parameter value */
                 utils::preserved_t<uint8_t> m_paramValue;
+
+                /* The workbench copy for the prelisten command */
+                synth::word_t* m_prelistenBench;
                 
                 /* The dirty flags */
                 union dirtyflags_t {

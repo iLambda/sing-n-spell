@@ -1,4 +1,5 @@
 #include "bitmaps.h"
+#include "audio/soundcard.h"
 #include "io/controller.h"
 #include "io/midi.h"
 #include "synth/engine.h"
@@ -38,8 +39,8 @@ char str_buf_itoa[4] = {0};
 char str_invalid[] = "Invalid (  )";
 
 ui::screen::KeymapScreen::KeymapScreen() : 
-    m_workbench(utils::preserved_constant(synth::worditerator_t::null())) { 
-
+    m_workbench(utils::preserved_constant(synth::worditerator_t::null())) {
+        this->m_prelistenBench = nullptr; 
 }
 
 
@@ -56,6 +57,11 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
     self->m_workbenchValueChanged = false;
+    /* Allocate prelisten bench if needed */
+    if (!self->m_prelistenBench) {
+        bool res = synth::Lexicon::alloc(self->m_prelistenBench, ENGINE_WORKBENCH_WORD_SIZE);
+        MBED_ASSERT(res);
+    }
     /* Add custom characters */
     ui::Display::driver()->createChar(6, bmp::lcd::BMP_LCD_TIMES);
     ui::Display::driver()->createChar(7, bmp::lcd::BMP_LCD_DELTA);
@@ -342,6 +348,21 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             synth::Engine::key().mode = mode;
             /* Fetch to workbench */
             synth::Engine::fetch();
+        }
+    }
+
+    /* Prelisten */
+    if (inputs.buttons.prelisten) {
+        /* Check alt */
+        if (inputs.alt) {
+            /* TODO : implement EXPLAIN command */
+            audio::Soundcard::shutUp();
+        } else {
+            /* Copy workbench into special bench */
+            synth::Lexicon::copy(synth::Engine::workbenchIterator().word(), self->m_prelistenBench);
+            /* Set word and play */
+            audio::Soundcard::word(synth::Lexicon::iterator(self->m_prelistenBench));
+            audio::Soundcard::play();
         }
     }
 

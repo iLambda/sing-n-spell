@@ -1,5 +1,6 @@
 #include <mbed.h>
 
+#include "audio/soundcard.h"
 #include "io/controller.h"
 #include "ui/display.h"
 #include "ui/screens/bootscreen.h"
@@ -17,31 +18,33 @@ ui::screen::SettingScreen settingScreen;
 
 int main() {
 
-  /* Start initialization */
-  #ifndef BUILD_CONFIG_DEBUG
-    dbg::setLEDs(0x01);
-  #else
-    dbg::setLEDs(0x00);
-  #endif
-  
-  /* Initialize controller */
-  io::Controller::run();
-  /* Initialize engine */
-  synth::Engine::run();
+    /* Start initialization */
+    #ifndef BUILD_CONFIG_DEBUG
+        dbg::setLEDs(0x01);
+    #else
+        dbg::setLEDs(0x00);
+    #endif
+    
+    /* Initialize soundcard */
+    audio::Soundcard::run();
+    /* Initialize controller */
+    io::Controller::run();
+    /* Initialize engine */
+    synth::Engine::run();
 
-  /* Initialize display */
-  ui::Display::add(bootScreen);
-  ui::Display::add(keymapScreen);
-  ui::Display::add(spellScreen);
-  ui::Display::add(settingScreen);
-  ui::Display::go(bootScreen);
-  ui::Display::run();
+    /* Initialize display */
+    ui::Display::add(bootScreen);
+    ui::Display::add(keymapScreen);
+    ui::Display::add(spellScreen);
+    ui::Display::add(settingScreen);
+    ui::Display::go(bootScreen);
+    ui::Display::run();
 
-  /* End initialization */
-  #ifndef BUILD_CONFIG_DEBUG
-    dbg::setLEDs(0x03);
-  #endif
+    /* End initialization */
+    #ifndef BUILD_CONFIG_DEBUG
+        dbg::setLEDs(0x03);
+    #endif
 
-  while(1) {
-  }
+    /* Loop forever */
+    while(1) { }
 }
