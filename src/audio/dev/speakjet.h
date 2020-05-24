@@ -32,12 +32,6 @@
 #define SPEAKJET_CODE_RESET         31       ///< Reset Volume Speed, Pitch, Bend to defaults.
 #define SPEAKJET_CODE_END           255
 
-#define AUDIO_SPEAKJET_THREAD_PRIORITY             osPriorityHigh
-#define AUDIO_SPEAKJET_THREAD_FLAG_STOP            0x01
-#define AUDIO_SPEAKJET_THREAD_FLAG_PLAY            0x02
-#define AUDIO_SPEAKJET_THREAD_FLAG_READY           0x04
-#define AUDIO_SPEAKJET_THREAD_FLAG_DONE_SPEAK      0x08
-
 namespace audio {
     
     namespace dev {
@@ -50,35 +44,32 @@ namespace audio {
                 /* The reset pin */
                 DigitalOut* m_reset;
                 /* The ready pin */
-                InterruptIn* m_ready;
+                InterruptIn* m_ready;   
                 /* The speaking pin */
-                InterruptIn* m_speaking;
-
-                /* The current word */
-                synth::worditerator_t* m_word;
-                /* The word mutex */
-                Mutex m_wordMutex;
-
-                /* The speaking thread */
-                Thread m_speakThread;
+                DigitalIn* m_speaking;
+                /* Is the chip ready ? */
+                bool m_isReady;
 
             public:
                 /* Create a SpeakJet interface */
                 SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking);
 
             private:
-                /* The speak thread */
-                void speakThread();
                 /* On ready interrupt */
                 void onReady();
-                /* On done speaking interrupt */
-                void onDoneSpeaking();
                 
             public:
-                /* Speak a word */
-                void speak(const synth::worditerator_t& word);
-                /* Stop speaking */
-                void stop();
+                /* Is the chip ready */
+                MBED_FORCEINLINE bool ready() { return this->m_isReady; }
+                /* Is the chip speaking */
+                MBED_FORCEINLINE bool speaking() { return !!this->m_speaking->read(); }
+                /* Is the buffer full ? */
+                MBED_FORCEINLINE bool full() { return false; }
+                
+                /* Empty the whole buffer */
+                void drain();
+                /* Add a value to the buffer */
+                bool send(const uint8_t& code);
         };
 
     }
