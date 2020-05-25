@@ -223,6 +223,7 @@ bool Lexicon::firstFitBinRemoved(Lexicon::Bin*& bin, size_t size, Lexicon::Bin* 
         return true; 
     }
     /* No space */
+    bin = nullptr;
     return false;
 }
 
@@ -309,8 +310,8 @@ bool Lexicon::resize(word_t*& word, size_t required_new_size, bool copy) {
 
     /* If we freed the current buffer, what is the smallest bin
        that could fit the memory we ask for ? ? */
-    Bin* idealBin;
-    if (firstFitBinRemoved(idealBin, required_new_size, word->bin)) {
+    Bin* idealBin = nullptr;
+    if (!firstFitBinRemoved(idealBin, required_new_size, word->bin)) {
         /* It couldn't fit anyway. Fail */
         return false;
     }
@@ -342,7 +343,7 @@ bool Lexicon::resize(word_t*& word, size_t required_new_size, bool copy) {
         /* Free the old data */
         osMemoryPoolFree(word->bin->pool, word->buffer);
         /* Replace the old buffer by the new one */
-        word->bin->pool = idealBin;
+        word->bin = idealBin;
         word->buffer = new_buffer;
     }
     /* All good ! */
