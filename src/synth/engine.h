@@ -49,6 +49,10 @@ namespace synth {
             static void fetch();
             /* Select a key, given a note */
             static void select(uint8_t midinote);
+            /* Converts a midi note to a frequency */
+            __STATIC_FORCEINLINE float MIDItoFrequency(uint8_t note) {
+                return io::midi_note_to_freq(note);
+            }
 
         public:
             /* Returns the keymap */
@@ -59,6 +63,15 @@ namespace synth {
             __STATIC_FORCEINLINE uint8_t note() {
                 return Engine::noteOfKey(Engine::m_key);
             }
+            /* Returns the pitch of the current note */
+            __STATIC_FORCEINLINE uint8_t pitch() {
+                return Engine::pitchOf(Engine::m_key);
+            }
+            /* Returns the frequency of the current note */
+            __STATIC_FORCEINLINE float frequency() {
+                return Engine::MIDItoFrequency(pitch());
+            }
+
             /* Returns the current key */
             __STATIC_FORCEINLINE keyentry_t& key() {
                 return Engine::m_keymap.keys[Engine::m_key];
@@ -104,6 +117,13 @@ namespace synth {
                 return Engine::m_keymap.keys[idx].mode == keymode_t::KEY_MODE_LOCAL
                     ? Engine::m_keymap.keys[idx].word
                     : Engine::m_keymap.global;
+            }
+            /* Pitch at */
+            __STATIC_FORCEINLINE uint8_t pitchOf(uint8_t idx) {
+                /* Check if current word is in global or local mode */
+                return Engine::m_keymap.keys[idx].mode == keymode_t::KEY_MODE_LOCAL
+                    ? Engine::m_keymap.keys[idx].pitch
+                    : noteOfKey(idx);
             }
             /* Note to Key ID */
             __STATIC_FORCEINLINE uint8_t keyOfNote(uint8_t midinote) {

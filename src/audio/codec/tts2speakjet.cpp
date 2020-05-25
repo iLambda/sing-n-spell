@@ -1,11 +1,13 @@
 #include "audio/dev/speakjet.h"
+#include "utils/math.h"
 #include "tts2speakjet.h"
+#include "utils/debugging.h"
 
 /* Create a translator */
-audio::codec::TTS2Speakjet::TTS2Speakjet(const synth::worditerator_t& it) : m_source(it) {
+audio::codec::TTS2Speakjet::TTS2Speakjet(const synth::worditerator_t& it, float frequency) : m_source(it) {
     /* Initialize */
     this->m_initialPosition = this->m_source.position();
-    utils::preserved_constant<uint8_t>(this->m_frequency, TTS2SPEAKJET_PITCH_DEFAULT);
+    utils::preserved_constant<float>(this->m_frequency, frequency);
     utils::preserved_constant<uint8_t>(this->m_speed, TTS2SPEAKJET_SPEED_DEFAULT);
     /* Reset the state */
     this->reset();
@@ -15,14 +17,13 @@ audio::codec::TTS2Speakjet::TTS2Speakjet(const synth::worditerator_t& it) : m_so
 void audio::codec::TTS2Speakjet::reset() {
     /* Reset iterator to initial position */
     this->m_source.select(this->m_initialPosition);
-    this->m_spent = false;
     /* Say we're in initial state */
     this->m_state = STATE_INITIAL;
 }
 
 /* Apply transition */
-MBED_FORCEINLINE void nextState() {
-    /* Initial state */
+MBED_FORCEINLINE uint8_t HzToByte(float freq) {
+    return (uint8_t)__USAT(utils::uround(freq), 8);
 }
 
 
@@ -30,30 +31,53 @@ MBED_FORCEINLINE void nextState() {
 bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
 
     /* Macro */
-    // #define OUT(c, d) { output = (c); duration = (d); break; }
+    #define OUT(c) { out = (c); break; }
+    #define GOTO(s) { this->m_state = (s); break; }
 
-    // /* Produce for state */
-    // switch (this->m_state) {
-    //     /* Send pitch */
-    //     case STATE_PITCH: OUT(SPEAKJET_CODE_PITCH, 0)
-    //     case STATE_PITCH_VALUE: OUT(this->m_frequency.current, 0)
-    //     /* Send speed */
-    //     case STATE_SPEED: OUT(SPEAKJET_CODE_SPEED, 0)
-    //     case STATE_SPEED_VALUE: OUT(this->m_speed.current, 0)
-    // }    
+    /* Were we spent when entering ? */
+    bool spent = this->m_state == STATE_SPENT;
 
-    // /* Do transition */
-    // nextState();
+    /* Check if iterator is null */
+    if (this->m_source.word() == nullptr) {
+        return false;
+    }
 
-    // /* If we're in now ready state */
-    // return this->m_state != STATE_READY;
+    /* Handle initial state (epsilon-transition) */
+    if (this->m_state == STATE_INITIAL) {
+        this->m_state = STATE_PITCH;
+    }
 
-    if (!m_spent) {
-        out = m_source.get();
-        if (!m_source.next()) { m_spent = true; }
-        if (out == 0xFF) { m_spent = true; }
-        return true;
+    /* Produce an output for this state */
+    switch (this->m_state) {
+        /* Initial state, error */
+        case STATE_INITIAL: { MBED_ASSERT(false); }
+        /* Send pitch */
+        case STATE_PITCH: OUT(SPEAKJET_CODE_PITCH)
+        case STATE_PITCH_VALUE: OUT(HzToByte(this->m_frequency.current))
+        /* Send speed */
+        case STATE_SPEED: OUT(SPEAKJET_CODE_SPEED)
+        case STATE_SPEED_VALUE: OUT(this->m_speed.current)
+        /* Send a byte */
+        case STATE_READY: OUT(this->m_source.get())
+        case STATE_SPENT: break;
+    }    
+
+    /* Do transition */
+    switch (this->m_state) {
+        /* Initial state, error */
+        case STATE_INITIAL: { MBED_ASSERT(false); }
+        /* Pitch */
+        case STATE_PITCH: GOTO(STATE_PITCH_VALUE)
+        case STATE_PITCH_VALUE: GOTO(STATE_READY)
+        /* Speed */
+        case STATE_SPEED: GOTO(STATE_PITCH_VALUE)
+        case STATE_SPEED_VALUE: GOTO(STATE_READY)
+        /* Ready */
+        case STATE_READY: GOTO(this->m_source.next() ? STATE_READY : STATE_SPENT)
+        /* Spent */
+        case STATE_SPENT: break;
     }
     
-    return false;
+    /* Return true iff we produced something, that is, if we're not spent */
+    return !spent;
 } 

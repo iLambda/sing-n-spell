@@ -12,6 +12,7 @@
 #define SOUNDCARD_SPEAK_THREAD_PRIORITY          osPriorityHigh
 #define SOUNDCARD_SPEAK_THREAD_FLAG_PLAY         0x01
 #define SOUNDCARD_SPEAK_THREAD_FLAG_STOP         0x02
+#define SOUNDCARD_SPEAK_THREAD_FLAG_FREQUENCY         0x04
 
 
 namespace audio {
@@ -33,6 +34,8 @@ namespace audio {
             static synth::worditerator_t* m_currentWord;
             /* The gate */
             static utils::preserved_t<bool> m_gate;
+            /* The frequency */
+            static utils::preserved_t<float> m_frequency;
 
         private:
             Soundcard() { }
@@ -48,6 +51,9 @@ namespace audio {
             /* Set the gate */
             static void gate(bool value);
             __STATIC_FORCEINLINE bool gate() { return Soundcard::m_gate.current; }
+            /* Set the frequency */
+            static void frequency(float value);
+            __STATIC_FORCEINLINE float frequency() { return Soundcard::m_frequency.current; }
             /* Play the sound, regardless of gate */
             static void play();
             /* Stop all sounds */

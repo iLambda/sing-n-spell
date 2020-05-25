@@ -360,6 +360,8 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
         } else {
             /* Copy workbench into special bench */
             synth::Lexicon::copy(synth::Engine::workbenchIterator().word(), self->m_prelistenBench);
+            /* Set frequency */
+            audio::Soundcard::frequency(synth::Engine::frequency());
             /* Set word and play */
             audio::Soundcard::word(synth::Lexicon::iterator(self->m_prelistenBench));
             audio::Soundcard::play();

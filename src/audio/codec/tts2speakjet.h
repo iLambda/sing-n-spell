@@ -8,7 +8,7 @@
 #include "synth/tts/lexicon.h"
 #include "utils/data/preserved.h"
 
-#define TTS2SPEAKJET_PITCH_DEFAULT      88
+#define TTS2SPEAKJET_PITCH_DEFAULT      88.0f
 #define TTS2SPEAKJET_SPEED_DEFAULT      114
 
 namespace audio {
@@ -26,15 +26,13 @@ namespace audio {
                     STATE_SPEED,
                     STATE_SPEED_VALUE,
                     STATE_READY,
+                    STATE_SPENT
                     
                 } m_state;
                 /* The frequency */
-                utils::preserved_t<uint8_t> m_frequency;
+                utils::preserved_t<float> m_frequency;
                 /* The speed */
                 utils::preserved_t<uint8_t> m_speed;
-
-                /* Is the iterator spent ? */
-                bool m_spent;
 
                 /* The word iterator */
                 synth::worditerator_t m_source;
@@ -43,7 +41,7 @@ namespace audio {
 
             public:
                 /* Create a translator */
-                TTS2Speakjet(const synth::worditerator_t& it);
+                TTS2Speakjet(const synth::worditerator_t& it, float frequency = TTS2SPEAKJET_PITCH_DEFAULT);
 
             public:
                 /* Get the underlying word iterator */
@@ -58,7 +56,7 @@ namespace audio {
 
             public:
                 /* Set frequency */
-                MBED_FORCEINLINE uint8_t& frequency() { return m_frequency.current; }
+                MBED_FORCEINLINE float& frequency() { return m_frequency.current; }
                 /* Set frequency */
                 MBED_FORCEINLINE uint8_t& speed() { return m_speed.current; }
         };

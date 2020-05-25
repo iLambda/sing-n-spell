@@ -76,9 +76,12 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
                 /* Not in edit mode ! */
                 /* Tidy */
                 Engine::tidy();
+                /* Get the key index */
+                auto idx = keyOfNote(midi.key);
                 /* Get word for given note */
-                auto word = Engine::wordOf(keyOfNote(midi.key));
-                audio::Soundcard::word(Lexicon::iterator(word));
+                audio::Soundcard::word(Lexicon::iterator(Engine::wordOf(idx)));
+                /* Set base frequency */
+                audio::Soundcard::frequency(Engine::MIDItoFrequency(Engine::pitchOf(idx)));     
                 /* Set gate */
                 audio::Soundcard::gate(true);            
             }

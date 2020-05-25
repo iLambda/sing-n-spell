@@ -5,6 +5,7 @@ audio::dev::TTS256* audio::Soundcard::m_translationChip = nullptr;
 audio::dev::SpeakJet* audio::Soundcard::m_soundChip = nullptr;
 synth::worditerator_t* audio::Soundcard::m_currentWord = nullptr;  
 utils::preserved_t<bool> audio::Soundcard::m_gate = utils::preserved_constexpr(false);
+utils::preserved_t<float> audio::Soundcard::m_frequency = utils::preserved_constexpr((float)TTS2SPEAKJET_PITCH_DEFAULT);
 Thread audio::Soundcard::m_speakThread;
 Mutex audio::Soundcard::m_wordMutex;
 
@@ -49,6 +50,7 @@ void audio::Soundcard::speakThread() {
             } else {
                 /* Make the translator */
                 codec::TTS2Speakjet translator(*m_currentWord);
+                translator.frequency() = Soundcard::m_frequency.current;
                 /* Release the mutex */
                 Soundcard::m_wordMutex.unlock();
                 /* While there are elements to play */
@@ -106,6 +108,16 @@ void audio::Soundcard::gate(bool value) {
                 SOUNDCARD_SPEAK_THREAD_FLAG_STOP 
                 | SOUNDCARD_SPEAK_THREAD_FLAG_PLAY);
         }
+    }
+}
+
+/* Set the frequency */
+void audio::Soundcard::frequency(float value) {
+    /* Update gate and send message */
+    if (utils::preserved_changes_with(Soundcard::m_frequency, value)) {
+        /* Edit frequency */
+        Soundcard::m_speakThread.flags_set(SOUNDCARD_SPEAK_THREAD_FLAG_FREQUENCY);
+        
     }
 }
 
