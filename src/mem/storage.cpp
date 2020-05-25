@@ -1,6 +1,6 @@
 #include "storage.h"
 
-void mem::Storage::setup() {
+void mem::Storage::run() {
 
 }
 

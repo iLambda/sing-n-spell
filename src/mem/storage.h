@@ -22,7 +22,7 @@ namespace mem {
 
         public:
             /* Setup the storage */
-            static void setup();
+            static void run();
 
         public:
             /* Save a song */
