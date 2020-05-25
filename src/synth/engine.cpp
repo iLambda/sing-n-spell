@@ -1,3 +1,4 @@
+#include "audio/soundcard.h"
 #include "synth/tts/lexicon.h"
 
 #include "engine.h"
@@ -64,25 +65,42 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
        SO WE DON'T MISS ANY MIDI MESSAGES */
     switch (io::midi_message_type(midi)) {
 
-        /* Note on / noteoff */
+        /* Note on */
         case io::MIDI_TYPE_NOTEON: {
-            /* If edit mode is enabled */
+            /* Check edit mode */
             if (Engine::editMode()) {
+                /* In edit mode ! */
                 /* Select the pressed key */
                 Engine::select(midi.key);
+            } else {
+                /* Not in edit mode ! */
+                /* Tidy */
+                Engine::tidy();
+                /* Get word for given note */
+                auto word = Engine::wordOf(keyOfNote(midi.key));
+                audio::Soundcard::word(Lexicon::iterator(word));
+                /* Set gate */
+                audio::Soundcard::gate(true);            
             }
             return;
         }
+        
+        /* Note off */
         case io::MIDI_TYPE_NOTEOFF: {
+            /* Set gate */
+            audio::Soundcard::gate(false);
             return;
         }
 
-        /* Handle start / stop messages */
+        /* Start */
         case io::MIDI_TYPE_START: {
+            /* Tidy the workbench */
+            Engine::tidy();
             /* Set playing */
             Engine::m_controllerPlaying = true;
             return;
         }
+        /* Stop */
         case io::MIDI_TYPE_STOP: {
             /* Set playing */
             Engine::m_controllerPlaying = false;
@@ -99,6 +117,8 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
                 /* All notes / sound off */
                 case io::MIDI_CC_ALLSOUNDOFF:
                 case io::MIDI_CC_NOTEOFF_ALL: {
+                    /* Stop all sounds */
+                    audio::Soundcard::shutUp();
                     return;
                 }
                 /* Other CC msgs */
@@ -108,6 +128,7 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
                 }
             }
         }
+        
         /* Other messages : ignore */
         default:
             return;
