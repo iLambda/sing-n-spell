@@ -43,8 +43,8 @@ ui::screen::KeymapScreen::KeymapScreen() :
         this->m_prelistenBench = nullptr; 
 
     /* Make gestures */
-    m_gestures.altNext = io::gestures::DoubleClick(DOUBLE_CLICK_DEFAULT_TIMEOUT);
-    m_gestures.altPrev = io::gestures::DoubleClick(DOUBLE_CLICK_DEFAULT_TIMEOUT);
+    m_gestures.altNext.timeout() = DOUBLE_CLICK_DEFAULT_TIMEOUT;
+    m_gestures.altPrev.timeout() = DOUBLE_CLICK_DEFAULT_TIMEOUT;
     /* Register */
     m_gestures.altNext.click() += callback(this, &ui::screen::KeymapScreen::onAltNextClick);
     m_gestures.altPrev.click() += callback(this, &ui::screen::KeymapScreen::onAltPrevClick);
@@ -118,14 +118,33 @@ MBED_FORCEINLINE void drawParamName(SerialLCD* const& display, synth::keymode_t 
 }
 
 /* Draw the parameter name on screen */
-MBED_FORCEINLINE void drawParamValue(SerialLCD* const& display, ui::screen::KeymapScreen::Parameter param, uint8_t* src) {
+MBED_FORCEINLINE void drawParamValue(SerialLCD* const& display, synth::keymode_t mode, ui::screen::KeymapScreen::Parameter param, uint8_t* src) {
     /* Place cursor */
-    display->setCursor(ui::Display::screenWidth() - 2, 1);
+    display->setCursor(ui::Display::screenWidth() - 3, 1);
+    display->write(" ");
     /* If pointer not null, write */
     if (src != nullptr) {
-        /* Write number */
-        utils::uint8_hex_to_cstr(str_buf_itoa, *src);
-        display->write(str_buf_itoa);
+        /* Check which parameter this is */
+        switch (param) {
+            /* Render pitch as a note */
+            case ui::screen::KeymapScreen::PARAM_PITCH:
+                /* If this is local, this is pitch : render as note */
+                if (mode == synth::KEY_MODE_LOCAL) {
+                    /* Draw note */
+                    uint8_t len = io::midi_note_to_cstr(str_buf_note, *src);
+                    /* Write it */
+                    display->setCursor(ui::Display::screenWidth() - len, 1);
+                    display->write(str_buf_note);
+                    /* Done ! */
+                    break;
+                }
+                /* Fallthrough */
+            default:
+                /* Write number */
+                utils::uint8_hex_to_cstr(str_buf_itoa, *src);
+                display->write(str_buf_itoa);
+                break;
+        }
     } else {
         /* Write no value */
         display->write("--");
@@ -221,7 +240,7 @@ void ui::screen::KeymapScreen::render(void* state, SerialLCD* display) {
     IF_DIRTY(self->m_isDirty.note, drawNote(display, synth::Engine::note()));
     /* Draw the parameter */
     IF_DIRTY(self->m_isDirty.paramName, drawParamName(display, synth::Engine::key().mode, self->m_parameter.current));
-    IF_DIRTY(self->m_isDirty.paramValue, drawParamValue(display, self->m_parameter.current, self->m_paramTarget.current));
+    IF_DIRTY(self->m_isDirty.paramValue, drawParamValue(display, synth::Engine::key().mode, self->m_parameter.current, self->m_paramTarget.current));
     /* Draw the frame */
     bool smthFrameDirty = !!self->m_isDirty.frame || !!self->m_isDirty.frameDatamode;
     IF_DIRTY(smthFrameDirty, drawFrame(display, !!self->m_isDirty.frame, map_datamode(self->m_datamode.current), synth::Engine::workbenchIterator()));
@@ -255,6 +274,7 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         /* Dirty keymode (and parameter name since it can change depending on mode ) */
         self->m_isDirty.mode = 1;
         self->m_isDirty.paramName = 1;
+        self->m_isDirty.paramValue = 1;
         self->m_isDirty.frame = 1;
         self->m_isDirty.frameData = 1;
         self->m_isDirty.frameDatamode = 1;
@@ -386,6 +406,7 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             synth::Engine::key().mode = mode;
             /* Fetch to workbench */
             synth::Engine::fetch();
+            
         }
     }
 
@@ -414,6 +435,7 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             synth::tts_code_transform(synth::Engine::workbenchIterator().at());
             /* Say it's been modified */
             self->m_workbenchValueChanged = true;
+            /* Redraw parameter value */
         }
     }
 

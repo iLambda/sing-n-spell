@@ -43,6 +43,8 @@ namespace io {
                 void rawClick();
                 /* The click event */
                 const utils::Event<bool>& click() { return this->m_event; }
+                /* The timeout */
+                float& timeout() { return this->m_timeoutDuration; };
 
         };
 
