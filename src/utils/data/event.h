@@ -1,5 +1,5 @@
-#ifndef __YM_GURL_UTILS_EVENT
-#define __YM_GURL_UTILS_EVENT
+#ifndef __STM32_INTERNAL_UTILS_EVENT
+#define __STM32_INTERNAL_UTILS_EVENT
 
 #include <mbed.h>
 #include <rtos.h>
