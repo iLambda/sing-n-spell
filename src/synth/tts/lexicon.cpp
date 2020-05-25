@@ -97,6 +97,15 @@ bool worditerator_t::next() {
     /* OK */
     return true;
 }
+
+/* Next */
+bool worditerator_t::hasNext() {
+    /* If word is null, return */
+    if (m_word == nullptr) { return false; }
+    /* Return */
+    return this->m_position < (this->m_word->bin->blockSize - 1);
+}
+
 /* Previous */
 bool worditerator_t::previous() {
     /* If word is null, return */

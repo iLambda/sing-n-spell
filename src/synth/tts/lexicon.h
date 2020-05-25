@@ -143,6 +143,8 @@ namespace synth {
             worditerator_t& end();
             /* Next */
             bool next();
+            /* Does it have a next element ? */
+            bool hasNext();
             /* Previous */
             bool previous();
             /* Select a value at index i */
