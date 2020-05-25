@@ -35,6 +35,9 @@ namespace synth {
             static bool m_controllerPlaying;
             /* The state of the edit mode button */
             static utils::preserved_t<bool> m_editMode;
+
+            /* The workbench mutex */
+            static Mutex m_workbenchMutex;
             
         private:
             /* Create some storage */
@@ -53,6 +56,10 @@ namespace synth {
             __STATIC_FORCEINLINE float MIDItoFrequency(uint8_t note) {
                 return io::midi_note_to_freq(note);
             }
+
+        private:
+            /* Tidy workbench then fetch */
+            static void tidyFetch(uint8_t newid);
 
         public:
             /* Returns the keymap */
@@ -104,11 +111,12 @@ namespace synth {
             static void inputReceived(const io::inputstate_t& input);
             
         private:
+            __STATIC_FORCEINLINE uint8_t& lastPosition() { return lastPositionOf(Engine::m_key); }
             /* Word at */
-            __STATIC_FORCEINLINE uint8_t& lastPosition() {
+            __STATIC_FORCEINLINE uint8_t& lastPositionOf(uint8_t idx) {
                 /* Check if current word is in global or local mode */
-                return Engine::m_keymap.keys[Engine::m_key].mode == keymode_t::KEY_MODE_LOCAL
-                    ? Engine::m_keymap.keys[Engine::m_key].lastIdx
+                return Engine::m_keymap.keys[idx].mode == keymode_t::KEY_MODE_LOCAL
+                    ? Engine::m_keymap.keys[idx].lastIdx
                     : Engine::m_keymap.lastGlobalIdx;
             }
             /* Word at */
@@ -140,7 +148,7 @@ namespace synth {
             __STATIC_FORCEINLINE void outOfMemory() {
                 /* Notify */
                 /* TODO : change */
-                //dbg::printf("Out of memory !!!");
+                dbg::printf("Out of memory !!!\n");
             }
 
 

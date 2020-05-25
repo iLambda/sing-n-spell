@@ -3,7 +3,7 @@
 
 #include "engine.h"
 
-#define BIND_OOM(x)   { if(!(x)) { Engine::outOfMemory(); return; } }
+#define BIND_OOM(x)   { if(!(x)) { dbg::printf("File %s line %d : ", __FILE__, __LINE__); Engine::outOfMemory(); return; } }
 
 using namespace synth;
 
@@ -21,6 +21,8 @@ bool Engine::m_workbenchDirty = false;
 bool Engine::m_controllerPlaying = false;
 /* The state of the edit mode button */
 utils::preserved_t<bool> Engine::m_editMode = utils::preserved_constexpr(false);
+/* The workbench mutex */
+Mutex Engine::m_workbenchMutex;
 
 /* Run the engine */
 void Engine::run() {
@@ -140,34 +142,57 @@ void Engine::midiReceived(const io::midimsg_t& midi) {
 
 /* Write workbench to key */
 void Engine::tidy() {
+    /* Lock */
+    m_workbenchMutex.lock();
     /* Save the last selected idx */
     Engine::lastPosition() = Engine::workbenchIterator().position();
     /* Shrink-clone word into place (and COLLAPSE ZERO LENGTH) */
     BIND_OOM(Lexicon::shrinkCopy(Engine::m_workbench, Engine::word(), true));
+    /* Unlock */
+    m_workbenchMutex.unlock();
 }
 
 
 /* Fetches current word in memory and write it in the wordbench */
 void Engine::fetch() {
+    /* Lock */
+    m_workbenchMutex.lock();
     /* Copy the keymap data into the workbench 
        (copy cannot fail, workbench is always biggest) */
     Lexicon::copy(Engine::word(), Engine::m_workbench);
     /* Reset the iterator to last saved position */
     Engine::workbenchIterator().select(Engine::lastPosition());
+    /* Unlock */
+    m_workbenchMutex.unlock();
+}
+
+/* Tidy fetch */
+void Engine::tidyFetch(uint8_t keyIdx) {
+    /* Lock */
+    m_workbenchMutex.lock();
+    /* Save the last selected idx */
+    Engine::lastPosition() = Engine::workbenchIterator().position();
+    /* Shrink-clone word into place (and COLLAPSE ZERO LENGTH) */
+    BIND_OOM(Lexicon::shrinkCopy(Engine::m_workbench, Engine::word(), true));
+    /* If they point towards the same word, don't copy */
+    if (Engine::word() != Engine::wordOf(keyIdx)) {
+        /* Copy the keymap data into the workbench 
+        (copy cannot fail, workbench is always biggest) */
+        Lexicon::copy(Engine::wordOf(keyIdx), Engine::m_workbench);
+    }
+    /* Reset the iterator to last saved position */
+    Engine::workbenchIterator().select(Engine::lastPositionOf(keyIdx));
+    /* Unlock */
+    m_workbenchMutex.unlock();
 }
 
 /* Select a key, given a note */
 void Engine::select(uint8_t midinote) {
     /* Convert note to key ID */
     uint8_t nextKey = Engine::keyOfNote(midinote);
-    uint8_t oldKey = Engine::m_key;
 
-    /* Tidy the workbench */
-    Engine::tidy();    
+    /* Tidy/fetch the workbench */
+    Engine::tidyFetch(nextKey);    
     /* Change the current id */
     Engine::m_key = nextKey;
-    /* If old key and next key point to the same word, no need to reload */
-    if (Engine::wordOf(nextKey) == Engine::wordOf(oldKey)) { return; }
-    /* Fetch the contents of the memory into the wordbench */
-    Engine::fetch();
 }

@@ -275,9 +275,9 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
         self->m_isDirty.mode = 1;
         self->m_isDirty.paramName = 1;
         self->m_isDirty.paramValue = 1;
-        self->m_isDirty.frame = 1;
-        self->m_isDirty.frameData = 1;
-        self->m_isDirty.frameDatamode = 1;
+        // self->m_isDirty.frame = 1;
+        // self->m_isDirty.frameData = 1;
+        // self->m_isDirty.frameDatamode = 1;
     }
     /* If iterator changed */
     if (utils::preserved_changes_with(self->m_workbench, synth::Engine::workbenchIterator()) || self->m_workbenchValueChanged) {
@@ -406,6 +406,8 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             synth::Engine::key().mode = mode;
             /* Fetch to workbench */
             synth::Engine::fetch();
+            /* Value change */
+            self->m_workbenchValueChanged = true;
             
         }
     }
