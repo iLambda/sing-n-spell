@@ -7,8 +7,8 @@
 #include "synth/tts/lexicon.h"
 
 #define KEYMAP_LENGTH           12*5
-#define KEYMAP_NOTE_FIRST       24
-#define KEYMAP_NOTE_LAST         KEYMAP_NOTE_FIRST + KEYMAP_LENGTH - 1
+#define KEYMAP_NOTE_FIRST       12
+#define KEYMAP_NOTE_LAST        KEYMAP_NOTE_FIRST + KEYMAP_LENGTH - 1
 
 namespace synth {
 
