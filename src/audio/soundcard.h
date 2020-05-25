@@ -43,6 +43,10 @@ namespace audio {
         public:
             /* Run the soundcard */
             static void run();
+            /* Is the soundcard ready ? */
+            static bool ready() {
+                return m_soundChip->ready();
+            }
             
         public:
             /* Set the current word */

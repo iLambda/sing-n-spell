@@ -1,3 +1,4 @@
+#include "audio/soundcard.h"
 #include "ui/display.h"
 #include "ui/helpers/draw.h"
 #include "version.h"
@@ -24,12 +25,13 @@ void ui::screen::BootScreen::update(void* state, bool* dirty) {
 
     /* Wait until time is reached */
     if (self->m_frame * UI_DISPLAY_REFRESH_UI_RATE >= BOOTSCREEN_DURATION) {
-        /* Reset time */
-        self->m_frame = 0;
-        /* Go to keymap screen */
-        Display::go<KeymapScreen>();
+        /* Check if sound chip ready */
+        if (audio::Soundcard::ready()) {
+            /* Go to keymap screen */
+            Display::go<KeymapScreen>();
+        }
+    } else {
+        /* Increase time */
+        ++self->m_frame;
     }
-    
-    /* Increase time */
-    ++self->m_frame;
 }
