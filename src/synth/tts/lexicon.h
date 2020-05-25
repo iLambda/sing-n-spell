@@ -135,6 +135,11 @@ namespace synth {
                 return worditerator_t(*this);
             }
 
+            /* Insert */
+            worditerator_t& insert();
+            /* Delete */
+            worditerator_t& erase();
+
             /* Select first element */
             worditerator_t& first();
             /* Select last element */

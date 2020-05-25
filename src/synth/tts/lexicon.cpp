@@ -134,6 +134,28 @@ const uint8_t& worditerator_t::get() const {
     return this->m_word->buffer[this->m_position];
 }
 
+/* Insert */
+worditerator_t& worditerator_t::insert() {
+    /* Shift the memory */
+    memmove(
+        &this->m_word->buffer[this->m_position + 1], 
+        &this->m_word->buffer[this->m_position], this->m_word->bin->blockSize - this->m_position - 1);
+    /* Erase the block that's been created */
+    this->m_word->buffer[this->m_position] = 0xFF;
+
+}
+/* Delete */
+worditerator_t& worditerator_t::erase() {
+    /* Shift the memory */
+    if (this->m_position < this->m_word->bin->blockSize - 1) {
+        memmove(
+            &this->m_word->buffer[this->m_position], 
+            &this->m_word->buffer[this->m_position + 1], this->m_word->bin->blockSize - this->m_position);
+    }
+    /* Erase the block that's been left */
+    this->m_word->buffer[this->m_word->bin->blockSize - 1] = 0xFF;
+}
+
 /* The bins */
 Lexicon::Bin Lexicon::m_bins[LEXICON_POOL_BINS_COUNT] = { 0 };
 /* Setup the bin data */
