@@ -232,6 +232,13 @@ namespace io {
     MBED_FORCEINLINE bool midi_is_special_cc(uint8_t controller) {
         return controller >= MIDI_CC_ALLSOUNDOFF;
     }
+
+    /* Note to freq */
+    inline float midi_note_to_freq(uint8_t note) {
+        int a = 440;
+        return (a / 32.0f) * pow(2.0f, ((((float)note) - 9.0f) / 12.0f));
+    }
+
     /* Note to string */
     inline uint8_t midi_note_to_cstr(char* str, uint8_t note) {
         /* Store intermediate result */
