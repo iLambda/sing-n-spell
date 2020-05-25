@@ -143,6 +143,7 @@ worditerator_t& worditerator_t::insert() {
     /* Erase the block that's been created */
     this->m_word->buffer[this->m_position] = 0xFF;
 
+    return *this;
 }
 /* Delete */
 worditerator_t& worditerator_t::erase() {
@@ -154,6 +155,7 @@ worditerator_t& worditerator_t::erase() {
     }
     /* Erase the block that's been left */
     this->m_word->buffer[this->m_word->bin->blockSize - 1] = 0xFF;
+    return *this;
 }
 
 /* The bins */
@@ -300,7 +302,7 @@ bool Lexicon::resize(word_t*& word, size_t required_new_size, bool copy) {
     if (required_new_size == 0) {  
         Lexicon::release(word);
         word = nullptr;
-        return false;
+        return true;
     }
     /* If word is null, error */
     if (word == nullptr) { return false; }
