@@ -41,6 +41,13 @@ char str_invalid[] = "Invalid (  )";
 ui::screen::KeymapScreen::KeymapScreen() : 
     m_workbench(utils::preserved_constant(synth::worditerator_t::null())) {
         this->m_prelistenBench = nullptr; 
+
+    /* Make gestures */
+    m_gestures.altNext = io::gestures::DoubleClick(DOUBLE_CLICK_DEFAULT_TIMEOUT);
+    m_gestures.altPrev = io::gestures::DoubleClick(DOUBLE_CLICK_DEFAULT_TIMEOUT);
+    /* Register */
+    m_gestures.altNext.click() += callback(this, &ui::screen::KeymapScreen::onAltNextClick);
+    m_gestures.altPrev.click() += callback(this, &ui::screen::KeymapScreen::onAltPrevClick);
 }
 
 
@@ -57,6 +64,7 @@ void ui::screen::KeymapScreen::reset(void* state) {
     self->m_keymode = utils::preserved_constant(synth::Engine::key().mode);
     self->m_workbench = utils::preserved_constant(synth::Engine::workbenchIterator());
     self->m_workbenchValueChanged = false;
+    
     /* Allocate prelisten bench if needed */
     if (!self->m_prelistenBench) {
         bool res = synth::Lexicon::alloc(self->m_prelistenBench, ENGINE_WORKBENCH_WORD_SIZE);
@@ -294,6 +302,36 @@ void ui::screen::KeymapScreen::update(void* state, bool* dirty) {
     *dirty = self->m_isDirty.value != 0;
 }
 
+/* Handle double click on next */
+void ui::screen::KeymapScreen::onAltNextClick(bool isDoubleClick) {
+    if (isDoubleClick) {
+        /* Insert a value */
+        synth::Engine::workbenchIterator().insert();
+        /* Advance */
+        synth::Engine::workbenchIterator().next();
+        /* Say it's been modified */
+        this->m_workbenchValueChanged = true;
+    } else {
+        /* Go to end of sequence */
+        synth::Engine::workbenchIterator().end();
+    }
+}
+/* Handle double click on prev */
+void ui::screen::KeymapScreen::onAltPrevClick(bool isDoubleClick) {
+    if (isDoubleClick) {
+        /* Try go back */
+        if (synth::Engine::workbenchIterator().previous()) {
+            /* Remove current spot */
+            synth::Engine::workbenchIterator().erase();
+            /* Say it's been modified */
+            this->m_workbenchValueChanged = true; 
+        }
+    } else {
+        /* Go to beginning of sequence */
+        synth::Engine::workbenchIterator().first(); 
+    }
+}
+
 void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs, io::outputstate_t& outputs) {
     /* Get self */
     auto self = (KeymapScreen*)state;
@@ -389,9 +427,15 @@ void ui::screen::KeymapScreen::input(void* state, const io::inputstate_t& inputs
             else { synth::Engine::workbenchIterator().previous(); }
         } else {
             /* Go next */
-            if (inputs.buttons.next) { synth::Engine::workbenchIterator().end(); }
+            if (inputs.buttons.next) {
+                /* Register click */
+                self->m_gestures.altNext.rawClick();
+            }
             /* Go previous */
-            else { synth::Engine::workbenchIterator().first(); }
+            else { 
+                /* Register click */
+                self->m_gestures.altPrev.rawClick();
+            }
         }
     }
 

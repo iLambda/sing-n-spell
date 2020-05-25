@@ -5,6 +5,7 @@
 #include <serlcd.h>
 
 #include "io/state.h"
+#include "io/gestures/doubleclick.h"
 #include "synth/keymap.h"
 #include "synth/tts/code.h"
 #include "ui/screen.h"
@@ -51,6 +52,12 @@ namespace ui {
 
                 /* The workbench copy for the prelisten command */
                 synth::word_t* m_prelistenBench;
+
+                /* The chronometers for double clicks */
+                struct {
+                    io::gestures::DoubleClick altNext;
+                    io::gestures::DoubleClick altPrev;
+                } m_gestures;
                 
                 /* The dirty flags */
                 union dirtyflags_t {
@@ -88,6 +95,11 @@ namespace ui {
                 static void update(void* state, bool* dirty);
                 /* Parse inputs */
                 static void input(void* state, const io::inputstate_t& inputs, io::outputstate_t& outputs);
+
+                /* Handle double click on next */
+                void onAltNextClick(bool isDoubleClick);
+                /* Handle double click on prev */
+                void onAltPrevClick(bool isDoubleClick);
         };
     }
 
