@@ -98,11 +98,14 @@ void audio::Soundcard::word(const synth::worditerator_t& word) {
 /* Set the gate */
 void audio::Soundcard::gate(bool value) {
     /* Update gate and send message */
-    if (utils::preserved_changes_with(m_gate, value)) {
-        /* Send message */
-        Soundcard::m_speakThread.flags_set(
-            value ? SOUNDCARD_SPEAK_THREAD_FLAG_PLAY
-                : SOUNDCARD_SPEAK_THREAD_FLAG_STOP);
+    if (utils::preserved_changes_with(Soundcard::m_gate, value)) {
+        /* If gate is now on, send a play msg */
+        if (Soundcard::m_gate.current) {
+            /* Stop current sound and play */
+            Soundcard::m_speakThread.flags_set(
+                SOUNDCARD_SPEAK_THREAD_FLAG_STOP 
+                | SOUNDCARD_SPEAK_THREAD_FLAG_PLAY);
+        }
     }
 }
 
@@ -117,7 +120,7 @@ void audio::Soundcard::play() {
 /* Stop all sounds */
 void audio::Soundcard::shutUp() {
     /* Set gate to false */
-    utils::preserved_update(m_gate, false);
+    utils::preserved_update(Soundcard::m_gate, false);
     /* Stop anyway */
     Soundcard::m_speakThread.flags_set(SOUNDCARD_SPEAK_THREAD_FLAG_STOP);
 }
