@@ -425,14 +425,19 @@ void Lexicon::release(word_t*& word) {
     if (word == nullptr) {
         return;
     }
-    /* Lock */
-    CriticalSectionLock lock;
-    /* Release internal buffer */
-    if (word->buffer != nullptr) {
-        osMemoryPoolFree(word->bin->pool, word->buffer);
+    /* Store old word */
+    word_t* ptr = word;
+    /* Enter critical */
+    {
+        /* Lock */
+        CriticalSectionLock lock;
+        /* Release internal buffer */
+        if (word->buffer != nullptr) {
+            osMemoryPoolFree(word->bin->pool, word->buffer);
+        }
+        /* Reinitialize word */
+        word = nullptr;
     }
     /* Release word */
-    delete word;
-    /* Reinitialize word */
-    word = nullptr;
+    delete ptr;
 }
