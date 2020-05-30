@@ -13,7 +13,7 @@ synth::worditerator_t worditerator = synth::worditerator_t::null();
 
 void audio::Soundcard::run() {
     /* Setup */
-    Soundcard::m_soundChip = new dev::SpeakJet(PINMAP_SPEAKJET_RX, PINMAP_SPEAKJET_RST, PINMAP_SPEAKJET_READY, PINMAP_SPEAKJET_SPK);
+    Soundcard::m_soundChip = new dev::SpeakJet(PINMAP_SPEAKJET_RX, PINMAP_SPEAKJET_RST, PINMAP_SPEAKJET_READY, PINMAP_SPEAKJET_SPK, PINMAP_SPEAKJET_BUFHFULL);
     /* Start the UI and event threads */
     Soundcard::m_speakThread.start(callback(&Soundcard::speakThread));
     Soundcard::m_speakThread.set_priority(SOUNDCARD_SPEAK_THREAD_PRIORITY);
@@ -64,6 +64,7 @@ void audio::Soundcard::speakThread() {
                         }
                         /* Just wait a lil bit */
                         ThisThread::sleep_for(1);
+                        // ThisThread::yield();
                     } while (Soundcard::m_soundChip->full());
                     /* Send the code */
                     Soundcard::m_soundChip->send(code);

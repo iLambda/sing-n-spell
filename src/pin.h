@@ -42,6 +42,7 @@
 #define PINMAP_SPEAKJET_RST             D3
 #define PINMAP_SPEAKJET_SPK             D4
 #define PINMAP_SPEAKJET_READY           D13
+#define PINMAP_SPEAKJET_BUFHFULL        A1
 
 /* TTS256 */
 #define PINMAP_TTS256_TX                NC

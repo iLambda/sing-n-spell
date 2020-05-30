@@ -9,7 +9,7 @@
 #include "synth/tts/lexicon.h"
 #include "utils/data/preserved.h"
 
-#define SOUNDCARD_SPEAK_THREAD_PRIORITY          osPriorityHigh
+#define SOUNDCARD_SPEAK_THREAD_PRIORITY          /*osPriorityHigh*/ osPriorityNormal
 #define SOUNDCARD_SPEAK_THREAD_FLAG_PLAY         0x01
 #define SOUNDCARD_SPEAK_THREAD_FLAG_STOP         0x02
 #define SOUNDCARD_SPEAK_THREAD_FLAG_FREQUENCY         0x04
