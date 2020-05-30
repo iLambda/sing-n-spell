@@ -34,12 +34,13 @@
 // static_assert (utils::size(duration_sound) == 128);
 
 /* Create a SpeakJet interface */
-audio::dev::SpeakJet::SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking) {
+audio::dev::SpeakJet::SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking, PinName bufferHalfFull) {
     /* Initialize devices */
     this->m_serial = new RawSerial(tx, NC, 9600);
     this->m_speaking = new DigitalIn(speaking);
     this->m_ready = new InterruptIn(ready);
     this->m_reset = new DigitalOut(rst);
+    this->m_bufferHalfFull = new DigitalIn(bufferHalfFull);
     this->m_isReady = false;
 
     /* Set to message thread when RDY pin rises (0 -> 1) */

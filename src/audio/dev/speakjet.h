@@ -47,12 +47,14 @@ namespace audio {
                 InterruptIn* m_ready;   
                 /* The speaking pin */
                 DigitalIn* m_speaking;
+                /* The buffer half full pin */
+                DigitalIn* m_bufferHalfFull;
                 /* Is the chip ready ? */
                 bool m_isReady;
 
             public:
                 /* Create a SpeakJet interface */
-                SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking);
+                SpeakJet(PinName tx, PinName rst, PinName ready, PinName speaking, PinName bufferHalfFull);
 
             private:
                 /* On ready interrupt */
@@ -64,7 +66,7 @@ namespace audio {
                 /* Is the chip speaking */
                 MBED_FORCEINLINE bool speaking() { return !!this->m_speaking->read(); }
                 /* Is the buffer full ? */
-                MBED_FORCEINLINE bool full() { return false; }
+                MBED_FORCEINLINE bool full() { return this->m_bufferHalfFull->read(); }
                 
                 /* Empty the whole buffer */
                 void drain();
