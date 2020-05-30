@@ -250,8 +250,6 @@ void synth::tts_code_next(uint8_t& code) {
         default: {
             code = TTS_PHON_END;
             break;
-    /* Go to ith value in given range, for a given code */
-    void tts_code_delta(uint8_t& code, int8_t delta);
         }
         
     }
