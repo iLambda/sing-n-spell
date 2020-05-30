@@ -55,15 +55,21 @@ void audio::Soundcard::speakThread() {
                 Soundcard::m_wordMutex.unlock();
                 /* While there are elements to play */
                 while (translator.next(code)) {
-                    /* Check if stop signal received */
-                    if (ThisThread::flags_get() & SOUNDCARD_SPEAK_THREAD_FLAG_STOP) {
-                        /* Stop putting data in the buffer */
-                        break;
-                    }
+                    /* Wait until the buffer isn't full anymore */
+                    do  {
+                        /* Check if stop signal received */
+                        if (ThisThread::flags_get() & SOUNDCARD_SPEAK_THREAD_FLAG_STOP) {
+                            /* Stop putting data in the buffer */
+                            goto fetch_exit;
+                        }
+                        /* Just wait a lil bit */
+                        ThisThread::sleep_for(1);
+                    } while (Soundcard::m_soundChip->full());
                     /* Send the code */
                     Soundcard::m_soundChip->send(code);
                 }
-                
+                /* Loop exit */
+                fetch_exit:;     
             }    
         }    
     }
