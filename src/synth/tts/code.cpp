@@ -386,3 +386,28 @@ const char* synth::tts_code_name(const uint8_t& code) {
             return nullptr;        
     }
 }
+
+
+/* Return true iff the code is transparent */
+bool synth::tts_code_transparent(const uint8_t& code) {
+    /* Depending on its type, */
+    switch (tts_code_type(code)) {
+        /* If command */
+        case TTS_TYPE_COMMAND:
+            /* We're transparent if we're none of these commands */
+            return !(
+                /* List of opaque commands */
+                code == TTS_CMD_REPEAT ||
+                code == TTS_CMD_DELAY_10MS ||
+                code == TTS_CMD_PITCH ||
+                code == TTS_CMD_GROUP_OPEN ||
+                code == TTS_CMD_GROUP_END ||
+                code == TTS_CMD_SUSTAIN_OPEN ||
+                code == TTS_CMD_SUSTAIN_END
+            );
+        /* Phonemes are always transparent */
+        case TTS_TYPE_PHONEME: return true;
+        /* Invalid phonemes are never transparent */
+        case TTS_TYPE_INVALID: return false;
+    }
+}

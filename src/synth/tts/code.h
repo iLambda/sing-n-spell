@@ -198,12 +198,8 @@ namespace synth {
     const char* tts_code_instruction(const uint8_t& code);
     /* Return the name of a code */
     const char* tts_code_name(const uint8_t& code);
-
-    // /* Ensure code_t is a POD & 8-bit wide*/
-    // #ifdef BUILD_CONFIG_DEBUG
-    //     static_assert(std::is_pod<tts_cmd_t>::value, "code_t must be a POD !");
-    //     static_assert (sizeof(tts_cmd_t) == sizeof(uint8_t), "code_t must be 8-bits wide !");
-    // #endif
+    /* Return true iff the code is transparent */
+    bool tts_code_transparent(const uint8_t& code);
 };
 
 #endif
