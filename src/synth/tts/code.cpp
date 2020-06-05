@@ -247,7 +247,7 @@ void synth::tts_code_next(uint8_t& code) {
         }
 
         /* If invalid, bring back to phoneme type, and set to an end character */
-        default: {
+        case TTS_TYPE_INVALID: {
             code = TTS_PHON_END;
             break;
         }
@@ -273,7 +273,7 @@ synth::tts_code_type_t synth::tts_code_transform(uint8_t& code) {
             return TTS_TYPE_COMMAND;
 
         /* If invalid */
-        default:
+        case TTS_TYPE_INVALID:
             /* Set to end */
             code = TTS_PHON_END;
             return TTS_TYPE_PHONEME;
@@ -304,7 +304,7 @@ void synth::tts_code_prev(uint8_t& code) {
         }
 
         /* If invalid, bring back to phoneme type, and set to an end character */
-        default: {
+        case TTS_TYPE_INVALID: {
             code = TTS_PHON_END;
             break;
         }
@@ -347,7 +347,7 @@ void synth::tts_code_delta(uint8_t& code, int8_t delta) {
         }
 
         /* If invalid, don't touch anything */
-        default: { break; }
+        case TTS_TYPE_INVALID: { break; }
     }
 }
 
@@ -364,7 +364,7 @@ const char* synth::tts_code_instruction(const uint8_t& code) {
             return tts_phoneme_instruction[code & 0x7F];
 
         /* If invalid, bring back to phoneme type, and set to an end character */
-        default:
+        case TTS_TYPE_INVALID:
             return nullptr;            
     }
 }
@@ -382,7 +382,7 @@ const char* synth::tts_code_name(const uint8_t& code) {
             return tts_phoneme_name[code & 0x7F];
 
         /* If invalid, bring back to phoneme type, and set to an end character */
-        default:
+        case TTS_TYPE_INVALID:
             return nullptr;        
     }
 }
