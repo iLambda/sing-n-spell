@@ -54,7 +54,7 @@ inline bool canAdvance(const synth::worditerator_t& it) {
     return true;
 }
 
-/* Get next produced code. Returns amount of codes left to be produced by current word command. */
+/* Get next produced code. Returns iff a code was indeed output */
 bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
 
     /* Macro */
