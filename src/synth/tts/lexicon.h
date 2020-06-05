@@ -146,6 +146,8 @@ namespace synth {
             worditerator_t& last();
             /* Select end of sequence */
             worditerator_t& end();
+            /* Peek the next element */
+            bool peek(uint8_t& out) const;
             /* Next */
             bool next();
             /* Does it have a next element ? */

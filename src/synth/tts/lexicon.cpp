@@ -98,6 +98,18 @@ bool worditerator_t::next() {
     return true;
 }
 
+/* Peek the next element */
+bool worditerator_t::peek(uint8_t& out) const {
+    /* If word is null, return */
+    if (m_word == nullptr) { return false; }
+    /* If out of bounds, return  */
+    if (this->m_position >= (this->m_word->bin->blockSize - 1)) { return false; }
+    /* Return next element */
+    out = this->m_word->buffer[this->m_position + 1];
+    /* OK */
+    return true;
+}
+
 /* Next */
 bool worditerator_t::hasNext() {
     /* If word is null, return */
