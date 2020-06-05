@@ -22,17 +22,26 @@ namespace audio {
                 enum : uint8_t {
                     STATE_INITIAL,
                     STATE_PITCH,
-                    STATE_PITCH_VALUE,
                     STATE_SPEED,
-                    STATE_SPEED_VALUE,
                     STATE_READY,
-                    STATE_SPENT
+                    STATE_SPENT,
+                    STATE_DATA_PHONEME,
+                    STATE_DATA_SKIP,
+                    STATE_DATA_CMD_TRANS,
                     
                 } m_state;
+                /* The state of current long command */
+                bool m_longCmd;
+                /* The start of the sustain command */
+                size_t m_sustainIndex;
+
+
                 /* The frequency */
                 utils::preserved_t<float> m_frequency;
                 /* The speed */
                 utils::preserved_t<uint8_t> m_speed;
+                /* The sustain mode enable */
+                bool m_sustainEnable;
 
                 /* The word iterator */
                 synth::worditerator_t m_source;
@@ -41,7 +50,7 @@ namespace audio {
 
             public:
                 /* Create a translator */
-                TTS2Speakjet(const synth::worditerator_t& it, float frequency = TTS2SPEAKJET_PITCH_DEFAULT);
+                TTS2Speakjet(const synth::worditerator_t& it, float frequency = TTS2SPEAKJET_PITCH_DEFAULT, uint8_t speed = TTS2SPEAKJET_SPEED_DEFAULT, bool sustain = false);
 
             public:
                 /* Get the underlying word iterator */
@@ -59,6 +68,8 @@ namespace audio {
                 MBED_FORCEINLINE float& frequency() { return m_frequency.current; }
                 /* Set frequency */
                 MBED_FORCEINLINE uint8_t& speed() { return m_speed.current; }
+                /* Set frequency */
+                MBED_FORCEINLINE bool& sustain() { return m_sustainEnable; }
         };
 
     }
