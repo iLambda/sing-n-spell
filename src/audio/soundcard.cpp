@@ -51,6 +51,7 @@ void audio::Soundcard::speakThread() {
                 /* Make the translator */
                 codec::TTS2Speakjet translator(*m_currentWord);
                 translator.frequency() = Soundcard::m_frequency.current;
+                translator.sustain() = Soundcard::m_gate.current;
                 /* Release the mutex */
                 Soundcard::m_wordMutex.unlock();
                 /* While there are elements to play */
@@ -68,6 +69,8 @@ void audio::Soundcard::speakThread() {
                     } while (Soundcard::m_soundChip->full());
                     /* Send the code */
                     Soundcard::m_soundChip->send(code);
+                    /* Set the sustain state */
+                    translator.sustain() = Soundcard::m_gate.current;
                 }
                 /* Loop exit */
                 fetch_exit:;     

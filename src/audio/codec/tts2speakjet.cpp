@@ -135,7 +135,7 @@ bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
                                 /* Check if sustain enabled, and index is valid (!= 0) */
                                 if (this->m_sustainEnable && this->m_sustainEnable) {
                                     /* Rewind position of the iterator */
-                                    this->m_source.select(this->m_sustainIndex);
+                                    this->m_source.select(this->m_sustainIndex - 1);
                                 }
                                 /* We're done ; skip current code since it is purely imaginary */
                                 GOTO_EPSI(STATE_DATA_SKIP);
