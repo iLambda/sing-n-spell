@@ -33,7 +33,11 @@ namespace audio {
                 /* The state of current long command */
                 bool m_longCmd;
                 /* The start of the sustain command */
-                size_t m_sustainIndex;
+                size_t m_sustainStartIndex;
+                /* The end of the sustain command */
+                size_t m_sustainEndIndex;
+                /* Are we sustaining the zone ? */
+                bool m_isSustaining;
 
 
                 /* The frequency */

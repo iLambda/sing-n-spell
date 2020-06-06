@@ -24,7 +24,9 @@ void audio::codec::TTS2Speakjet::reset() {
     /* Say we're in initial state */
     this->m_state = STATE_INITIAL;
     /* Reset sustain */
-    this->m_sustainIndex = 0;
+    this->m_sustainStartIndex = 0;
+    this->m_sustainEndIndex = 0;
+    this->m_isSustaining = false;
 }
 
 /* Apply transition */
@@ -109,6 +111,18 @@ bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
         case STATE_DATA_CMD_TRANS:      GOTO_NEXT(STATE_READY)
         /* Ready */
         case STATE_READY: {
+            /* If sustain is disabled, and we're in the sustain zone, cut short */
+            if (!this->m_sustainEnable && this->m_isSustaining) {
+                /* Sustain is now done */
+                this->m_isSustaining = false;
+                /* If no end index, just go to the end of the stream */
+                auto endIdx = 
+                    this->m_sustainEndIndex 
+                        ? this->m_sustainEndIndex
+                        : this->m_source.length();
+                /* Go to it */
+                this->m_source.select(endIdx);
+            }
             /* Get type of current data */ 
             auto code = this->m_source.get();
             auto type = synth::tts_code_type(code);
@@ -127,15 +141,26 @@ bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
                             /* Sustain */
                             case synth::TTS_CMD_SUSTAIN_OPEN: {
                                 /* Save sustain index as next element */
-                                this->m_sustainIndex = this->m_source.position() + 1;
+                                this->m_sustainStartIndex = this->m_source.position() + 1;
+                                /* If sustain is enabled, we're in the sustain zone */
+                                if (this->m_sustainEnable) {
+                                    this->m_isSustaining = true;
+                                }
                                 /* We're done ; skip current code since it is purely imaginary */
                                 GOTO_EPSI(STATE_DATA_SKIP);
                             }
                             case synth::TTS_CMD_SUSTAIN_END: {
-                                /* Check if sustain enabled, and index is valid (!= 0) */
-                                if (this->m_sustainEnable && this->m_sustainEnable) {
+                                /* Set sustain end index */
+                                this->m_sustainEndIndex = this->m_source.position() + 1;
+                                /* Check if sustain enabled, and index is valid (!= 0, and section nonempty) */
+                                if (this->m_sustainEnable && 
+                                    this->m_sustainStartIndex &&
+                                    this->m_source.position() > this->m_sustainStartIndex) {
                                     /* Rewind position of the iterator */
-                                    this->m_source.select(this->m_sustainIndex - 1);
+                                    this->m_source.select(this->m_sustainStartIndex - 1);
+                                } else {
+                                    /* We're not sustaining anymore */
+                                    this->m_isSustaining = false;
                                 }
                                 /* We're done ; skip current code since it is purely imaginary */
                                 GOTO_EPSI(STATE_DATA_SKIP);

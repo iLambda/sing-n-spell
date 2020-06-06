@@ -20,8 +20,10 @@ void audio::Soundcard::run() {
 }
 
 void audio::Soundcard::speakThread() {
-    /* Code data */
+    /* Local data */
     static uint8_t code;
+    static utils::preserved_t<bool> gate;
+    static bool full = false;
     /* Event loop */
     while(1) {
         /* Wait for play */
@@ -41,6 +43,9 @@ void audio::Soundcard::speakThread() {
         if (flags & SOUNDCARD_SPEAK_THREAD_FLAG_PLAY) {
             /* Play. Clear flag */
             ThisThread::flags_clear(SOUNDCARD_SPEAK_THREAD_FLAG_PLAY);
+            /* Set gate */
+            gate.last = false;
+            gate.current = Soundcard::m_gate.current;
             /* Lock mutex */
             Soundcard::m_wordMutex.lock();
             /* If word iterator isn't null */
@@ -54,6 +59,8 @@ void audio::Soundcard::speakThread() {
                 translator.sustain() = Soundcard::m_gate.current;
                 /* Release the mutex */
                 Soundcard::m_wordMutex.unlock();
+                /* Initialize the full status */
+                full = Soundcard::m_soundChip->full();
                 /* While there are elements to play */
                 while (translator.next(code)) {
                     /* Wait until the buffer isn't full anymore */
@@ -63,14 +70,24 @@ void audio::Soundcard::speakThread() {
                             /* Stop putting data in the buffer */
                             goto fetch_exit;
                         }
-                        /* Just wait a lil bit */
-                        ThisThread::sleep_for(1);
+                        /* Update the gate */
+                        if (utils::preserved_changes_with(gate, Soundcard::m_gate.current)) {
+                            /* Poll for gate falling */
+                            if (gate.last && !gate.current) {
+                                /* Clear the buffer */
+                                Soundcard::m_soundChip->drain();
+                            }   
+                        }
+                        /* Just wait a lil bit if full */
+                        if (full) {
+                            ThisThread::sleep_for(1);
+                        }
                         // ThisThread::yield();
-                    } while (Soundcard::m_soundChip->full());
+                    } while (full = Soundcard::m_soundChip->full());
+                    /* Set the sustain state */
+                    translator.sustain() = gate.current;
                     /* Send the code */
                     Soundcard::m_soundChip->send(code);
-                    /* Set the sustain state */
-                    translator.sustain() = Soundcard::m_gate.current;
                 }
                 /* Loop exit */
                 fetch_exit:;     
