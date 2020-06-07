@@ -83,7 +83,7 @@ void audio::Soundcard::speakThread() {
                             ThisThread::sleep_for(1);
                         }
                         // ThisThread::yield();
-                    } while (full = Soundcard::m_soundChip->full());
+                    } while ( (full = Soundcard::m_soundChip->full()) );
                     /* Set the sustain state */
                     translator.sustain() = gate.current;
                     /* Send the code */
