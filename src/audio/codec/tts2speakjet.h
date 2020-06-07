@@ -62,8 +62,9 @@ namespace audio {
                 /* Get the underlying word */
                 MBED_FORCEINLINE const synth::word_t* word() { return m_source.word(); }
 
-                /* Get next produced code. Returns true if it wrote a code. */
-                bool next(uint8_t& output); 
+                /* Get next produced code, and tells iff the command is instantaneous 
+                   Returns true if it wrote a code. */
+                bool next(uint8_t& output, bool* instantaneous = nullptr); 
                 /* Reset the current translator state */
                 void reset();
 

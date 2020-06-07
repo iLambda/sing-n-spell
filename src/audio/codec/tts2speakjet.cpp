@@ -57,14 +57,16 @@ inline bool canAdvance(const synth::worditerator_t& it) {
 }
 
 /* Get next produced code. Returns iff a code was indeed output */
-bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
+bool audio::codec::TTS2Speakjet::next(uint8_t& out, bool* instantaneous) {
 
     /* Macro */
     #define __RESET() { this->m_longCmd = true; }
 
+    #define PRODUCE(v) { if (instantaneous) { *instantaneous = (v); } }
+
     #define NOP() { break; }
-    #define OUT(c) { out = (c); break; }
-    #define OUT_LONG(c, d) OUT(m_longCmd ? (c) : (d))
+    #define OUT(c, i) { out = (c); PRODUCE(i); break; }
+    #define OUT_LONG(c, d, i) OUT(m_longCmd ? (c) : (d), i)
 
     #define GOTO(s) { __RESET(); this->m_state = (s); break; }
     #define GOTO_LONG(s) { if (this->m_longCmd)  { this->m_longCmd = false; } else { __RESET(); this->m_state = (s); } break; }
@@ -89,12 +91,12 @@ bool audio::codec::TTS2Speakjet::next(uint8_t& out) {
         case STATE_SPENT:               NOP()
         case STATE_READY:               NOP()
         /* Send pitch & speed */
-        case STATE_PITCH:               OUT_LONG(SPEAKJET_CODE_PITCH, HzToByte(this->m_frequency.current))
-        case STATE_SPEED:               OUT_LONG(SPEAKJET_CODE_SPEED, this->m_speed.current)
+        case STATE_PITCH:               OUT_LONG(SPEAKJET_CODE_PITCH, HzToByte(this->m_frequency.current), true)
+        case STATE_SPEED:               OUT_LONG(SPEAKJET_CODE_SPEED, this->m_speed.current, true)
         /* Send a byte */
         case STATE_DATA_SKIP:           NOP()
-        case STATE_DATA_PHONEME:        OUT(this->m_source.get())
-        case STATE_DATA_CMD_TRANS:      OUT(this->m_source.get())
+        case STATE_DATA_PHONEME:        OUT(this->m_source.get(), false)
+        case STATE_DATA_CMD_TRANS:      OUT(this->m_source.get(), true)
     }    
 
     /* Do transition */
