@@ -24,6 +24,12 @@ bpColor = "Crimson";
 bpCornerRadius = 10;
 bpDock = [2.5, 0];
 bpDockThickness = 2.1;
+bpDockScrewPadding = 7.5;
+bpDockScrewDiameter = 4;
+bpNotchPosition = -12;
+bpNotchSize = [33.5, 8];
+bpNotchScrewDistance = 9.5;
+bpNotchScrewDiameter = 4;
 bpInset = [2.1, 2.1];
 bpInsetThickness = 1;
 
@@ -128,6 +134,28 @@ spkStudRotation = 90;
 /* [Components - Nucleo] */
 nucleoDrawGhosts = true;
 nucleoHideBottom = true;
+
+/* [Connectors - MIDI DIN] */
+midiCenterDiameter = 17;
+midiScrewDiameter = 3.5;
+midiDrawGhosts = true;
+
+/* [Connectors - Power] */
+pwrJackDiameter = 13;
+pwrSwitchHoleSize = [19.1, 13.5];
+pwrJackDrawGhosts = true;
+pwrSwitchDrawGhosts = true;
+
+/* [Connectors - USB] */
+usbDiameter = 24.9;
+usbScrewDiameter = 4.5;
+usbDrawGhosts = true;
+
+/* [Connectors - Jacks] */
+jack3mmDiameter = 4.5;
+jack6mmDiameter = 10.5;
+jack3mmDrawGhosts = true;
+jack6mmDrawGhosts = true;
 
 /* [Visualisation] */
 explode = 0; // [0: 30]
@@ -292,6 +320,113 @@ module PanelGutterSeparator() {
 /****************************
     Components
 *****************************/
+
+module Component_MIDI(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (midiDrawGhosts) {
+    %color("#3030307F")
+    translate([-14.65, -3.4, -9.6])
+    import("models/connector_midi.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    /* Main hole */
+    rotate([90, 0, 0])
+    cylinder($itsy + bpDockThickness + bpInsetThickness, midiCenterDiameter/2, midiCenterDiameter/2, center=true);
+    
+    /* Screw 1 */
+    rotate([90, 0, 0])
+    translate([11, 0, 0])
+    cylinder($itsy + bpDockThickness + bpInsetThickness, midiScrewDiameter/2, midiScrewDiameter/2, center=true);
+    
+    /* Screw 2 */
+    rotate([90, 0, 0])
+    translate([-11, 0, 0])
+    cylinder($itsy + bpDockThickness + bpInsetThickness, midiScrewDiameter/2, midiScrewDiameter/2, center=true);
+  }
+}
+
+module Component_PowerSwitch(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (pwrSwitchDrawGhosts) {
+    %color("#3030307F")
+    translate([0, 0, -14.2])
+    import("models/connector_switch.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    cube([pwrSwitchHoleSize.x, pwrSwitchHoleSize.y, $itsy + bpDockThickness + bpInsetThickness], center=true);
+  }
+}
+
+module Component_PowerJack(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (pwrJackDrawGhosts) {
+    %color("#3030307F")
+    rotate([0, 180, 0])
+    translate([-7, -7, -2])
+    import("models/connector_dcjack.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    cylinder($itsy + bpDockThickness + bpInsetThickness, pwrJackDiameter/2, pwrJackDiameter/2, center=true);
+  }
+}
+
+module Component_USB(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (usbDrawGhosts) {
+    %color("#3030307F")
+    translate([-13, -15.5, -35])
+    import("models/connector_usb.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    /* Main hole */
+    cylinder($itsy + bpDockThickness + bpInsetThickness, usbDiameter/2, usbDiameter/2, center=true);
+    /* L screw */ 
+    translate([9.5, -12, 0])
+    cylinder($itsy + bpDockThickness + bpInsetThickness, usbScrewDiameter/2, usbScrewDiameter/2, center=true);
+    translate([-9.5, 12, 0])
+    cylinder($itsy + bpDockThickness + bpInsetThickness, usbScrewDiameter/2, usbScrewDiameter/2, center=true);
+  }
+}
+
+
+module Component_Jack6mm(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (jack6mmDrawGhosts) {
+    %color("#3030307F")
+    translate([-15.4, -15.6, -24.6])
+    import("models/connector_6mmjack.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    /* Main hole */
+    cylinder($itsy + bpDockThickness + bpInsetThickness, jack6mmDiameter/2, jack6mmDiameter/2, center=true);
+  }
+}
+
+
+module Component_Jack3mm(holeColor=bpColor) {  
+  /* Draw ghosts */
+  if (jack3mmDrawGhosts) {
+    %color("#3030307F")
+    translate([-4.2, -4.55, -18])
+    import("models/connector_3mmjack.stl", 3);
+  }
+  /* The holes */
+  color(holeColor)
+  union() {
+    /* Main hole */
+    cylinder($itsy + bpDockThickness + bpInsetThickness, jack3mmDiameter/2, jack3mmDiameter/2, center=true);
+  }
+}
 
 module Component_ScrewStudTop(
   axisDiameter = 4,
@@ -1127,26 +1262,163 @@ module Part_Backplate(holes=false) {
     translate([0, -(boxThickness + $itsy)/2 - (boxThickness - bpDockThickness), 0])
     rotate([90, 0, 0])
     RoundBox(bpWidth + 2*bpDock.x, bpHeight + 2*bpDock.y, boxThickness + $itsy, bpCornerRadius);
+    /* The screw holes */
+    translate([(bpWidth + bpDock.x)/2, 0, 0])
+    rotate([90, 0, 0])
+    union() {
+      translate([0, bpHeight/2 - bpDockScrewPadding, 0])
+      cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+      translate([0, -(bpHeight/2 - bpDockScrewPadding), 0])
+      cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+    }
+    /* The screw holes */
+    translate([-(bpWidth + bpDock.x)/2, 0, 0])
+    rotate([90, 0, 0])
+    union() {
+      translate([0, bpHeight/2 - bpDockScrewPadding, 0])
+      cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+      translate([0, -(bpHeight/2 - bpDockScrewPadding), 0])
+      cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+    }
+    /* The top notch */
+    translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, bpHeight/2 - bpNotchSize.y/2])
+    rotate([90, 0, 0])
+    union() {          
+      translate([bpNotchScrewDistance, 0, 0])
+      cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+      translate([-bpNotchScrewDistance, 0, 0])
+      cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+    }
+    /* The bottom notch */
+    translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, -bpHeight/2 + bpNotchSize.y/2])
+    rotate([90, 0, 0])
+    union() {          
+      translate([bpNotchScrewDistance, 0, 0])
+      cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+      translate([-bpNotchScrewDistance, 0, 0])
+      cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+    }
   }
   else {
-    /* The main plate */
-    color(bpColor)
     difference() {
-      /* Make the plate*/
-      union() {      
-        /* The dock part */
-        translate([0, -bpDockThickness/2 - (boxThickness - bpDockThickness), 0])
-        rotate([90, 0, 0])
-        RoundBox(bpWidth + 2*bpDock.x, bpHeight + 2*bpDock.y, bpDockThickness, bpCornerRadius);
-        /* The plate part*/
-        translate([0, -(boxThickness - bpDockThickness)/2, 0])
-        rotate([90, 0, 0])
-        RoundBox(bpWidth, bpHeight, (boxThickness - bpDockThickness), bpCornerRadius);
+      /* The main plate */
+      color(bpColor)
+      difference() {
+        /* Make the plate*/
+        difference() {
+          color(bpColor)
+          union() {
+            /* The dock part */
+            translate([0, -bpDockThickness/2 - (boxThickness - bpDockThickness), 0])
+            rotate([90, 0, 0])
+            RoundBox(bpWidth + 2*bpDock.x, bpHeight + 2*bpDock.y, bpDockThickness, bpCornerRadius);
+            /* The plate part*/
+            translate([0, -(boxThickness - bpDockThickness)/2, 0])
+            rotate([90, 0, 0])
+            RoundBox(bpWidth, bpHeight, (boxThickness - bpDockThickness), bpCornerRadius);
+          }
+          /* The top notch */
+          translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, bpHeight - bpNotchSize.y])
+          rotate([90, 0, 0])
+          RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+          /* The bottom notch */
+          translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, -(bpHeight - bpNotchSize.y)])
+          rotate([90, 0, 0])
+          RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+        }
+        
+        color(bpColor)
+        union() {
+          /* The top notch */
+          translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, bpHeight/2 - bpNotchSize.y/2])
+          rotate([90, 0, 0])
+          union() {          
+            translate([bpNotchScrewDistance, 0, 0])
+            cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+            translate([-bpNotchScrewDistance, 0, 0])
+            cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+          }
+          /* The bottom notch */
+          translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, -bpHeight/2 + bpNotchSize.y/2])
+          rotate([90, 0, 0])
+          union() {          
+            translate([bpNotchScrewDistance, 0, 0])
+            cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+            translate([-bpNotchScrewDistance, 0, 0])
+            cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+          }
+          
+          /* The inset */
+          translate([0, -(boxThickness - bpDockThickness)/2 - bpInsetThickness - $itsy/2, 0])
+          union() {
+            /* Switch */
+            translate([65, 0, 0])
+            rotate([90, 0, 0])
+            RoundBox(16, bpHeight- bpInset.y, (boxThickness - bpDockThickness  + $itsy), bpCornerRadius);
+            /* Jack 3mm */
+            translate([-22, 0, 0])
+            rotate([90, 0, 0])
+            RoundBox(11.5, 13, (boxThickness - bpDockThickness  + $itsy), bpCornerRadius);
+          }
+          /* The screw holes */
+          translate([(bpWidth + bpDock.x)/2, 0, 0])
+          rotate([90, 0, 0])
+          union() {
+            translate([0, bpHeight/2 - bpDockScrewPadding, 0])
+            cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+            translate([0, -(bpHeight/2 - bpDockScrewPadding), 0])
+            cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+          }
+          /* The screw holes */
+          translate([-(bpWidth + bpDock.x)/2, 0, 0])
+          rotate([90, 0, 0])
+          union() {
+            translate([0, bpHeight/2 - bpDockScrewPadding, 0])
+            cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+            translate([0, -(bpHeight/2 - bpDockScrewPadding), 0])
+            cylinder($itsy + bpDockThickness, bpDockScrewDiameter/2, bpDockScrewDiameter/2, center=true);
+          }
+        }
       }
-      /* The inset */
-      translate([0, -(boxThickness - bpDockThickness)/2 - bpInsetThickness - $itsy/2, 0])
-      rotate([90, 0, 0])
-      RoundBox(bpWidth - bpInset.x, bpHeight- bpInset.y, (boxThickness - bpDockThickness  + $itsy), bpCornerRadius);
+      
+      /* The components */
+      rotate([0, 0, 180]) {
+        /* The switch */
+        translate([-65, 0, 0])
+        rotate([90, 90, 0])
+        Component_PowerSwitch();
+        
+        /* The DC jack ports */
+        translate([-45, 0, 0])
+        rotate([90, 90, 0])
+        Component_PowerJack();
+        
+        /* The USB port */
+        translate([-20, 0, 0])
+        rotate([90, 0, 0])
+        Component_USB();
+        
+        /* The line out jack */
+        translate([6, 0, 0])
+        rotate([90, 0, 0])
+        Component_Jack6mm();
+        
+        /* The headphones jack */
+        translate([22, 0, 0])
+        rotate([90, 0, 0])
+        Component_Jack3mm();
+        
+        translate([42, 0, 0])
+        union() {
+          /* Midi IN */
+          rotate([0, 90, 0])
+          Component_MIDI();
+          /* Midi OUT */
+          translate([20.5, 0, 0])
+          rotate([0, 90, 0])
+          Component_MIDI();
+        }
+      }
     }
     
   }
@@ -1159,28 +1431,73 @@ module Part_Box() {
     /* Make box */
     if (renderBoxAround) {
       color(boxColor)
-      
-      difference() {
-        /* The filled box */
-        translate([0, 0, fullHeight/2])
-        RoundBox(fpWidth + 2*boxThickness, fpLength + 2*boxThickness, fullHeight, fpCornerRadius);
-        /* Hollow it */
-        translate([0, 0, fullHeight/2])
-        translate([0, 0, boxThickness + $itsy/2])
-        RoundBevelBox(fpWidth, fpLength, fullHeight + $itsy, fpCornerRadius, boxBevel);
-       /* Remove screw stud holes */
-        if (renderBoxScrewStuds) {
-          union()
-          /*color(boxColor)*/
-          translate([0, 0, boxThickness/2]) {
-            translate(fpssPosition1) Part_BottomScrewStud(true);
-            translate(fpssPosition2) Part_BottomScrewStud(true);
-            translate(fpssPosition3) Part_BottomScrewStud(true);
-            translate(fpssPosition4) Part_BottomScrewStud(true);
+      union() {
+        difference() {
+          /* The filled box */
+          translate([0, 0, fullHeight/2])
+          RoundBox(fpWidth + 2*boxThickness, fpLength + 2*boxThickness, fullHeight, fpCornerRadius);
+          /* Hollow it */
+          translate([0, 0, fullHeight/2])
+          translate([0, 0, boxThickness + $itsy/2])
+          RoundBevelBox(fpWidth, fpLength, fullHeight + $itsy, fpCornerRadius, boxBevel);
+         /* Remove screw stud holes */
+          if (renderBoxScrewStuds) {
+            union()
+            /*color(boxColor)*/
+            translate([0, 0, boxThickness/2]) {
+              translate(fpssPosition1) Part_BottomScrewStud(true);
+              translate(fpssPosition2) Part_BottomScrewStud(true);
+              translate(fpssPosition3) Part_BottomScrewStud(true);
+              translate(fpssPosition4) Part_BottomScrewStud(true);
+            }
+          }
+         /* Remove the backplate */
+         Part_Backplate(holes=true); 
+        }
+        /* Add the notches */
+        color(boxColor)
+        translate([0, fpLength/2 + boxThickness, boxThickness/2 + (boxHeight-boxOvershoot-boxOverhangHeight)/2])
+        difference() {
+          /* Make the notches */
+          intersection() {
+            /* The dock part */
+            translate([0, -(boxThickness - bpDockThickness)/2, 0])
+            rotate([90, 0, 0])
+            RoundBox(bpWidth, bpHeight + 2, (boxThickness - bpDockThickness), bpCornerRadius);
+            /* The notches */
+            union() {          
+              /* The top notch */
+              translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, bpHeight - bpNotchSize.y])
+              rotate([90, 0, 0])
+              RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+              /* The bottom notch */
+              translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, -(bpHeight - bpNotchSize.y)])
+              rotate([90, 0, 0])
+              RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+            }
+          }
+          /* Remove the holes */
+          union() {
+            /* The top notch */
+            translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, bpHeight/2 - bpNotchSize.y/2])
+            rotate([90, 0, 0])
+            union() {          
+              translate([bpNotchScrewDistance, 0, 0])
+              cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+              translate([-bpNotchScrewDistance, 0, 0])
+              cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+            }
+            /* The bottom notch */
+            translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2, -bpHeight/2 + bpNotchSize.y/2])
+            rotate([90, 0, 0])
+            union() {          
+              translate([bpNotchScrewDistance, 0, 0])
+              cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+              translate([-bpNotchScrewDistance, 0, 0])
+              cylinder($itsy + bpDockThickness, bpNotchScrewDiameter/2, bpNotchScrewDiameter/2, center=true);
+            }
           }
         }
-       /* Remove the backplate */
-       Part_Backplate(holes=true); 
       }
     }
     /* Make overhang */
