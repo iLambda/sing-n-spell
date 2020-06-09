@@ -18,7 +18,7 @@ namespace mem {
     };
 
     /* Convert a memory error to a string */
-    const char* const& mem_fail_explain(const mem_error_t& error);
+    const char* mem_fail_explain(const mem_error_t& error);
     /* Copy a memory error to a string */
     void mem_fail_explain(const mem_error_t& error, char* output);
 };

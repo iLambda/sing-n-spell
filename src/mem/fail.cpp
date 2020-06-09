@@ -4,7 +4,7 @@ const char* mem_faildesc_oom = "Out of memory";
 const char* mem_faildesc_nokaddr = "Invalid address";
 
 /* Convert a memory error to a string */
-const char* const& mem::mem_fail_explain(const mem::mem_error_t& error) {
+const char* mem::mem_fail_explain(const mem::mem_error_t& error) {
     /* -Wswitch is now error */
     #pragma GCC diagnostic error "-Wswitch"
     /* Check error */
@@ -15,6 +15,8 @@ const char* const& mem::mem_fail_explain(const mem::mem_error_t& error) {
     }
     /* -Wswitch is now warning */
     #pragma GCC diagnostic warning "-Wswitch"
+    /* Null */
+    return nullptr;
 }
 
 
