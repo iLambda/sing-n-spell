@@ -30,6 +30,7 @@ bpNotchPosition = -12;
 bpNotchSize = [33.5, 8];
 bpNotchScrewDistance = 9.5;
 bpNotchScrewDiameter = 4;
+bpNotchDelta = 0.4;
 bpInset = [2.1, 2.1];
 bpInsetThickness = 1;
 
@@ -1320,11 +1321,11 @@ module Part_Backplate(holes=false) {
           /* The top notch */
           translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, bpHeight - bpNotchSize.y])
           rotate([90, 0, 0])
-          RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+          RoundBox(bpNotchSize.x + bpNotchDelta*2, bpHeight + bpNotchDelta*2, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
           /* The bottom notch */
           translate([bpNotchPosition, -(boxThickness - bpDockThickness)/2  + $itsy/2, -(bpHeight - bpNotchSize.y)])
           rotate([90, 0, 0])
-          RoundBox(bpNotchSize.x, bpHeight, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
+          RoundBox(bpNotchSize.x + bpNotchDelta*2, bpHeight + bpNotchDelta*2, (boxThickness - bpDockThickness) + $itsy, bpCornerRadius);
         }
         
         color(bpColor)
