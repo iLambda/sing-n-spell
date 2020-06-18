@@ -278,6 +278,7 @@ synth::tts_code_type_t synth::tts_code_transform(uint8_t& code) {
             code = TTS_PHON_END;
             return TTS_TYPE_PHONEME;
     }
+    return TTS_TYPE_INVALID;
 }
 
 /* Go to prev value in given range, for a given code */
@@ -367,6 +368,7 @@ const char* synth::tts_code_instruction(const uint8_t& code) {
         case TTS_TYPE_INVALID:
             return nullptr;            
     }
+    return nullptr;
 }
 
 /* Return the name of a code */
@@ -385,6 +387,7 @@ const char* synth::tts_code_name(const uint8_t& code) {
         case TTS_TYPE_INVALID:
             return nullptr;        
     }
+    return nullptr;
 }
 
 
@@ -410,4 +413,5 @@ bool synth::tts_code_transparent(const uint8_t& code) {
         /* Invalid phonemes are never transparent */
         case TTS_TYPE_INVALID: return false;
     }
+    return false;
 }
