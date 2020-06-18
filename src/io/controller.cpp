@@ -24,7 +24,7 @@ void io::Controller::run() {
     #ifdef DEBUG_MODE_MIDI_USB 
         Controller::m_midi = &dbg::serial;
     #else
-        Controller::m_midi = new RawSerial(PINMAP_DEV_MIDI_OUT, PINMAP_DEV_MIDI_IN, MIDI_BAUD_RATE);
+        Controller::m_midi = new RawSerial(NC, PINMAP_DEV_MIDI_IN, MIDI_BAUD_RATE);
     #endif
     Controller::m_midi->attach((&Controller::isrMidi), SerialBase::RxIrq);
     /* Start MIDI thread */

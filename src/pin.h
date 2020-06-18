@@ -33,8 +33,7 @@
 
 /** Devices **/
 /* MIDI */
-#define PINMAP_DEV_MIDI_OUT             NC          
-#define PINMAP_DEV_MIDI_IN              NC
+#define PINMAP_DEV_MIDI_IN              PD_2
 
 /** Soundchips **/
 /* Speakjet */
